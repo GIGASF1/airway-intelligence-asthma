@@ -261,6 +261,8 @@ details.ev p{margin-top:5px; color:var(--dim); border-left:2px solid var(--blue)
   border-radius:6px; padding:10px 20px; font-size:13px; cursor:pointer; margin:8px 8px 0 0;}
 .disclaim{font-size:10px; color:#5c6f83; margin-top:14px; border-top:1px solid var(--line); padding-top:8px;}
 .kbd{font-size:10px; color:#5c6f83;}
+#credit{position:fixed; right:10px; bottom:3px; z-index:60; font-size:9px;
+  color:#4a5a6d; letter-spacing:.5px; pointer-events:none; opacity:.85;}
 /* Presenter mode: larger type for projecting to a room */
 #presentbtn,#homebtn{background:transparent; color:#8fa3b8; border:1px solid var(--line);
   border-radius:3px; padding:2px 8px; font-size:10px; cursor:pointer; margin-top:3px;}
@@ -391,6 +393,8 @@ body.present .discuss .q{font-size:16px;}
   </div>
 </footer>
 
+<div id="credit" aria-hidden="true">Dr. Ramaniuk &middot; for education purposes only</div>
+
 <div class="overlay" id="homeoverlay">
   <div class="card">
     <h1>AIRWAY INTELLIGENCE — ASTHMA</h1>
@@ -407,7 +411,7 @@ body.present .discuss .q{font-size:16px;}
       FACILITATOR GUIDE (answers &amp; discussion points — instructor only)</button>
     <p class="kbd">Keyboard: Tab / Shift-Tab to move · Space to select · Enter to commit.
     Toggle PHYSIOLOGY REVEAL for teaching overlays on waveforms and imaging.</p>
-    <p class="disclaim">Educational simulation. Simulated waveforms/imaging. Not for clinical
+    <p class="disclaim">Created by Dr. Ramaniuk for education purposes only. Educational simulation. Simulated waveforms/imaging. Not for clinical
     use. All imagery is computer-generated and illustrative; no real patient images or data.
     Evidence anchors: GINA 2026 (2025 cycle), critical care literature, ELSO/EOLIA.</p>
   </div>
@@ -1198,6 +1202,7 @@ function wireDiscuss(){
 function showGuide(){
   $('#guidecard').innerHTML =
     '<h1>FACILITATOR GUIDE</h1>'+
+    '<p style="color:#5c6f83;font-size:11px">Airway Intelligence — Asthma · created by Dr. Ramaniuk · for education purposes only</p>'+
     '<p class="noprint" style="color:#ffb300">⚠ Contains answers and spoilers — instructor use only. '+
     'Print or save as PDF for the session.</p>'+
     '<p class="noprint" style="color:#8fa3b8">Jump to: '+SCENARIOS.map((s,i)=>
@@ -1294,7 +1299,7 @@ function endScenario(){
       '<button class="bigbtn" onclick="startScenario('+(App.scenIdx+1)+')">NEXT SCENARIO → '+
       esc(SCENARIOS[App.scenIdx+1].title)+'</button>':'')+
     '<button class="ghostbtn" onclick="goHome()">SCENARIO MENU</button>'+
-    '<p class="disclaim">Educational simulation. Simulated waveforms/imaging. Not for clinical use.</p>';
+    '<p class="disclaim">Created by Dr. Ramaniuk for education purposes only. Educational simulation. Simulated waveforms/imaging. Not for clinical use.</p>';
   $('#endoverlay').style.display='flex';
   logLine('in','━━ COMPLETED: '+s.title+' ━━');
 }
