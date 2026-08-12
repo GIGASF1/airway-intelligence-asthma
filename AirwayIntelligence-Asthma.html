@@ -239,7 +239,8 @@ details.ev p{margin-top:5px; color:var(--dim); border-left:2px solid var(--blue)
 #debrieflog .pa{color:var(--amber);} #debrieflog .in{color:var(--dim);}
 /* ---------- overlays ---------- */
 .overlay{position:fixed; inset:0; background:rgba(4,7,12,.93); z-index:50;
-  display:flex; align-items:center; justify-content:center; overflow:auto;}
+  display:flex; overflow:auto; padding:20px 0;}
+.overlay .card{margin:auto;}  /* margin:auto inside flex = centered when short, scrollable from the TOP when tall */
 .card{max-width:760px; width:92%; background:var(--panel); border:1px solid var(--line);
   border-radius:10px; padding:26px 30px; margin:20px;}
 .card h1{color:var(--green); font-size:20px; letter-spacing:2px; margin-bottom:4px;}
@@ -296,8 +297,25 @@ body.present .vr .val{font-size:17px;}
 body.present .discuss .q{font-size:16px;}
 /* Facilitator guide print view */
 #guideoverlay .card{max-width:940px;}
-.gscene{border-left:2px solid var(--line); padding-left:10px; margin:8px 0; font-size:12px;}
-.gscene ul{margin:4px 0 4px 18px;}
+/* Facilitator guide readability */
+.gscen{margin-bottom:26px;}
+.gscen h2{background:#132030; border-left:4px solid var(--green); padding:8px 12px;
+  border-radius:4px; font-size:16px; margin-top:20px;}
+.gscene{border:1px solid var(--line); border-radius:6px; padding:10px 12px;
+  margin:10px 0; font-size:12.5px; line-height:1.55; background:#0b1119;}
+.gsc-head{color:var(--white); font-weight:700; margin-bottom:6px;}
+.gsc-head .num{display:inline-block; background:var(--line); color:var(--cyan);
+  border-radius:3px; padding:1px 7px; margin-right:8px; font-size:11px;}
+.gsc-ans{color:#c9f5db; background:#0d1f15; border-left:3px solid var(--green);
+  padding:6px 9px; border-radius:3px; margin:6px 0;}
+.gsc-ask{color:#ffe9b8; background:#241b06; border-left:3px solid var(--amber);
+  padding:6px 9px; border-radius:3px; margin:8px 0 4px;}
+.gsc-ask .lbl{color:var(--amber); font-weight:700; letter-spacing:1px; font-size:10.5px; display:block; margin-bottom:3px;}
+.gsc-pts{margin:4px 0 2px 22px; color:#c8d4e0;}
+.gsc-pts li{margin-bottom:4px;}
+.gdebrief{border:1px dashed var(--line); border-radius:6px; padding:10px 14px; margin-top:10px;}
+.gdebrief ul{margin:6px 0 2px 20px; font-size:12.5px; line-height:1.55;}
+.gdebrief li{margin-bottom:6px;}
 @media print{
   body.printguide > :not(#guideoverlay){display:none !important;}
   body.printguide #guideoverlay{display:block !important; position:static; background:#fff; overflow:visible;}
@@ -1182,27 +1200,32 @@ function showGuide(){
     '<h1>FACILITATOR GUIDE</h1>'+
     '<p class="noprint" style="color:#ffb300">⚠ Contains answers and spoilers — instructor use only. '+
     'Print or save as PDF for the session.</p>'+
+    '<p class="noprint" style="color:#8fa3b8">Jump to: '+SCENARIOS.map((s,i)=>
+      '<a href="#gscen'+i+'" style="color:#26c6da">S'+(i+1)+'</a>').join(' · ')+'</p>'+
     SCENARIOS.map((s,i)=>{
-      return '<div class="gscen"><h2>SCENARIO '+(i+1)+' — '+esc(s.title)+'</h2>'+
+      return '<div class="gscen" id="gscen'+i+'"><h2>SCENARIO '+(i+1)+' — '+esc(s.title)+'</h2>'+
       '<p><i>'+esc(s.phenotypeContext)+'</i></p>'+
       '<p><b>Objectives:</b> '+s.learningObjectives.map(esc).join(' · ')+'</p>'+
       s.scenes.map((sc,j)=>{
         const best = sc.type==='vent'
           ? 'Optimize to dossier bands: Vt 450–600 mL, RR 10–14, flow 60–100, set PEEP 0–5, VE ≤10, I:E ≥1:3, Pplat ≤30, ΔP ≤15'
           : (sc.options||[]).filter(o=>o.correct===true).map(o=>o.label).join('  +  ');
-        return '<div class="gscene"><b>Scene '+(j+1)+':</b> '+esc(sc.prompt.split('\n')[0])+
-          '<br><span style="color:#00e676">✓ Best action: '+esc(best)+'</span>'+
-          (sc.discuss ? '<br><span style="color:#ffb300">⌁ Discuss: '+esc(sc.discuss.question)+'</span>'+
-            '<ul>'+sc.discuss.points.map(p=>'<li>'+esc(p)+'</li>').join('')+'</ul>' : '')+
+        return '<div class="gscene">'+
+          '<div class="gsc-head"><span class="num">SCENE '+(j+1)+'</span>'+esc(sc.prompt.split('\n')[0])+'</div>'+
+          '<div class="gsc-ans">✓ BEST ACTION — '+esc(best)+'</div>'+
+          (sc.discuss ? '<div class="gsc-ask"><span class="lbl">⌁ ASK THE ROOM</span>'+esc(sc.discuss.question)+'</div>'+
+            '<ul class="gsc-pts">'+sc.discuss.points.map(p=>'<li>'+esc(p)+'</li>').join('')+'</ul>'+
+            (sc.discuss.evidence?'<div style="color:#5c6f83;font-size:11px;margin-left:22px">['+esc(sc.discuss.evidence)+']</div>':'') : '')+
           '</div>';
       }).join('')+
-      '<p><b>Debrief — key principles:</b></p><ul>'+
-      s.debriefSummary.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div>';
+      '<div class="gdebrief"><b style="color:#26c6da">DEBRIEF — KEY PRINCIPLES</b><ul>'+
+      s.debriefSummary.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div></div>';
     }).join('')+
     '<button class="bigbtn noprint" onclick="window.print()">PRINT / SAVE AS PDF</button>'+
     '<button class="ghostbtn noprint" onclick="hideGuide()">CLOSE</button>';
   document.body.classList.add('printguide');
   $('#guideoverlay').style.display='flex';
+  $('#guideoverlay').scrollTop=0;
 }
 function hideGuide(){
   document.body.classList.remove('printguide');
