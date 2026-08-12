@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<!--
+================================================================================
+AIRWAY INTELLIGENCE — ASTHMA
+Interactive simulation-based teaching module for pulmonary & critical care fellows
+================================================================================
+EDUCATIONAL SIMULATION. Simulated waveforms/imaging. Not for clinical use.
+All imagery is simulated/illustrative — no real patient data.
+Single self-contained HTML file: inline CSS + vanilla JS + SVG/Canvas.
+No external libraries, no CDN, no build step. Runs offline by double-clicking.
+
+HOW TO ADD SCENARIO 6+ (Extension Guide)
+----------------------------------------
+1. Scroll to the SCENARIOS array (search for "SCENARIOS = [").
+2. Append a new object following ScenarioSchema:
+   {
+     id: "s6",
+     title: "…",
+     phenotypeContext: "…",
+     learningObjectives: ["…"],
+     initialState: {
+       vitals: {hr, spo2, sbp, dbp, rr, etco2},
+       vent:   null | {vt, rr, flow, peep, fio2, raw, crs},  // raw cmH2O/L/s, crs mL/cmH2O
+       abg:    {ph, paco2, pao2, hco3} | null,
+       imaging:{cxr:{...}|null, us:{...}|null},
+       severity: 0..1        // drives flow-volume loop scooping
+     },
+     realCases: [ {label, url} ],   // optional: real-image links (e.g. Radiopaedia) shown
+                                    // ONLY on the end card so they never spoil a diagnosis
+     scenes: [
+       { id, prompt, dataView: "flowloop|scalars|cxr|us|abg|monitor|ventpanel",
+         type: "single" | "multi" | "vent",
+         options: [ { id, label, correct:true|false|"partial",
+                      evidence:"<short citation string from dossier>",
+                      feedback:"<teaching text>",
+                      effect:{ vitals?, vent?, abg?, imaging?, severity?, deterioration? } } ],
+         requiredToAdvance: [optionIds],       // for type:"multi"
+         targets: {...},                        // for type:"vent" (see S5 scene s5-vent)
+         discuss: {                             // OPTIONAL, non-scored. Appears only AFTER a
+           question:"open-ended prompt",        // correct commit (never spoils the answer).
+           points:["facilitator talking points"],
+           evidence:"<citation string>"         // Facilitator reveals points on click; a notes
+         }                                      // box logs the room's answers to the debrief.
+       }
+     ],
+     debriefSummary: ["…key teaching points with [citations]…"]
+   }
+
+DOSSIER ADDENDUM — S6 (v3)  *** VERIFY CLINICALLY BEFORE TEACHING ***
+---------------------------------------------------------------------
+Extracted verbatim-faithfully from the PRIMARY SOURCES supplied by the author:
+GINA Difficult-to-treat & Severe Asthma Guide 2025 (ginasthma.org) and Oberle et al.,
+"Biologic Management in Severe Asthma for Adults: An American College of Chest
+Physicians Clinical Practice Guideline" (CHEST 2025). Citation tags used in Evidence
+popovers: [GINA SA Guide 2025], [ACCP/CHEST Biologics 2025].
+- DIFFICULT-TO-TREAT: uncontrolled despite medium/high-dose ICS + second controller
+  (usually LABA) or maintenance OCS, or requiring high-dose treatment to stay controlled.
+  Often explained by technique, adherence, smoking, comorbidities, or wrong diagnosis.
+  SEVERE: subset — uncontrolled despite adherence with maximal optimized high-dose
+  ICS-LABA AND managed contributory factors, or worsens on step-down. Retrospective label.
+- Before biologics: optimize; consider add-on LAMA / LTRA / low-dose azithromycin;
+  last-resort low-dose OCS; test/treat parasitic infection before starting a biologic.
+- Anti-IgE (omalizumab, SC q2–4wk, dose by weight+IgE): eligibility = sensitization
+  (SPT or sIgE) + total IgE/weight within dosing range + exacerbations. RCT meta-analysis:
+  44% fewer severe exacerbations. Baseline IgE does NOT predict response; post-hoc
+  predictors eos >=260 or FeNO >=19.5; childhood-onset; allergen-driven. Anaphylaxis ~0.2%.
+- Anti-IL5/5Ra (mepolizumab 100 mg SC q4wk; benralizumab 30 mg SC q4wk x3 then q8wk;
+  reslizumab 3 mg/kg IV q4wk): eligibility = exacerbations + blood eos above local cut
+  (e.g. >=150 or >=300/uL; cut may differ on OCS). 47–54% fewer exacerbations; median OCS
+  dose reduced ~50%. Predictors (strong): higher eos, more exacerbations; also adult-onset,
+  nasal polyps, maintenance OCS, FEV1 <65%.
+- Anti-IL4Ra (dupilumab 200/300 mg SC q2wk; 300 mg if OCS-dependent or atopic dermatitis):
+  predictors (strong): higher eos AND higher FeNO; also treats CRSwNP, atopic dermatitis,
+  EoE. Cautions: transient eosinophilia 4–13%; EGPA unmasking on OCS reduction; NOT
+  suggested if blood eos >1,500/uL (excluded from trials).
+- Anti-TSLP (tezepelumab 210 mg SC q4wk): eligibility usually just severe exacerbations;
+  may be used with NO elevated T2 markers. 30–70% fewer exacerbations; did NOT reduce
+  maintenance OCS vs placebo. Predictors: higher eos, higher FeNO.
+- CHOOSING (GINA): payer criteria, T2 comorbidities (polyps, atopic dermatitis),
+  predictors, cost, dosing frequency, route/self-administration, patient preference.
+  No head-to-head trials.
+- ACCP/CHEST Biologics 2025 (all Conditional, Very Low Certainty):
+  * T2-high = AEC >=300 cells/uL, FeNO >=25 ppb, and/or sputum eos >=1–3%.
+  * Allergic asthma + >=1 exacerbation/yr requiring OCS: either omalizumab or dupilumab;
+    if >=2 exacerbations/yr OR any hospitalization -> dupilumab over omalizumab;
+    if worse QoL and <2/yr -> omalizumab over dupilumab;
+    if FEV1 <70% predicted -> dupilumab over omalizumab.
+  * Steroid-dependent: either anti-IL5/5Ra or dupilumab (OCS reduction ~47% and ~28%
+    respectively); dupilumab over tezepelumab. If pre-OCS AEC >1,500 -> consider
+    anti-IL5/5Ra (hypereosinophilia risk with dupilumab).
+  * Comorbidity steer: atopic dermatitis / EoE -> dupilumab; CRSwNP -> either dupilumab
+    or mepolizumab.
+  * Non-response to omalizumab after 4–6 mo -> either anti-IL5/5Ra or dupilumab
+    (use comorbidities + FeNO to choose).
+  * Non-response to anti-IL5/5Ra after 4–6 mo -> either dupilumab or tezepelumab
+    (steroid-dependent -> dupilumab); post-treatment FeNO >=25 ppb advises the switch
+    to dupilumab.
+- TRIAL & REVIEW: initial trial at least 4 months (all classes); review response at
+  3–4 months, then every 3–6 months: symptom control (ACT 4-wk / ACQ-5 1-wk),
+  exacerbations & OCS courses, lung function, T2 comorbidities, side-effects,
+  satisfaction. Good response -> taper OCS FIRST (monitor morning cortisol; stress-dose
+  advice up to 6 months post-cessation); NEVER completely stop ICS; cease add-on inhaled
+  (e.g. LAMA) before reducing ICS-LABA; reduce ICS only after 3–6 months stable.
+  Unclear response -> extend trial; non-response -> switch to another eligible biologic.
+3. The engine (runner, renderers, physiology model) needs NO changes.
+4. New dataViews: add a case to setView() + a draw function in the rAF loop.
+================================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Airway Intelligence — Asthma</title>
+<style>
+:root{
+  --bg:#0a0e14; --panel:#101722; --panel2:#0d131d; --line:#1d2836;
+  --green:#00e676; --amber:#ffb300; --cyan:#26c6da; --red:#ff5252;
+  --white:#e8eef5; --dim:#8fa3b8; --blue:#4f8cff;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  background:var(--bg); color:var(--white);
+  font-family:"SF Mono","Menlo","Consolas","Courier New",monospace;
+  font-size:14px; line-height:1.45; overflow:hidden;
+}
+button{font-family:inherit;}
+/* ---------- top bar ---------- */
+#topbar{
+  display:flex; align-items:center; gap:14px;
+  height:74px; padding:0 14px; border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,#0e1520,#0a0e14);
+}
+#brand{min-width:220px;}
+#brand h1{font-size:15px; letter-spacing:1px; color:var(--green); font-weight:700;}
+#brand .sub{font-size:11px; color:var(--dim);}
+#scenetitle{flex:0 1 auto; font-size:12px; color:var(--amber); max-width:300px;
+  border-left:1px solid var(--line); padding-left:14px;}
+#vitalstrip{margin-left:auto; display:flex; align-items:center; gap:10px;}
+.vtile{min-width:74px; text-align:center; padding:4px 6px; border:1px solid var(--line);
+  border-radius:4px; background:var(--panel2);}
+.vtile .lab{font-size:9px; color:var(--dim); letter-spacing:1px;}
+.vtile .val{font-size:19px; font-weight:700;}
+.vtile.hr .val{color:var(--green);} .vtile.spo2 .val{color:var(--cyan);}
+.vtile.bp .val{color:var(--red); font-size:15px;} .vtile.rr .val{color:var(--white);}
+.vtile.etco2 .val{color:var(--amber);}
+.vtile.alarm{animation:alarmblink 1s steps(2,start) infinite; border-color:var(--red);}
+@keyframes alarmblink{50%{background:#3a1116;}}
+#stripEcg{background:#050810; border:1px solid var(--line); border-radius:4px;}
+/* ---------- main stage ---------- */
+#stage{display:grid; grid-template-columns:minmax(460px,58%) 1fr; gap:0;
+  height:calc(100% - 74px - 118px);}
+#datapanel{border-right:1px solid var(--line); padding:10px; overflow:auto;
+  background:var(--panel2); position:relative;}
+#viztitle{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
+#viztitle .t{font-size:12px; color:var(--cyan); letter-spacing:1px;}
+#viztitle .simtag{font-size:9px; color:var(--dim); border:1px solid var(--line);
+  padding:1px 6px; border-radius:3px;}
+#revealbtn{margin-left:auto; background:#132030; color:var(--cyan);
+  border:1px solid var(--cyan); border-radius:4px; padding:4px 10px; font-size:11px; cursor:pointer;}
+#revealbtn[aria-pressed="true"]{background:var(--cyan); color:#04222a; font-weight:700;}
+#viz{background:#050810; border:1px solid var(--line); border-radius:6px;
+  width:100%; height:auto; display:block;}
+#svgwrap{display:none;}
+#svgwrap svg{width:100%; height:auto; border:1px solid var(--line); border-radius:6px;
+  background:#050810; display:block;}
+#abgcard{display:none; border:1px solid var(--line); border-radius:6px;
+  background:#050810; padding:18px; max-width:520px;}
+#abgcard h3{color:var(--amber); font-size:13px; margin-bottom:10px; letter-spacing:1px;}
+.abgrow{display:flex; justify-content:space-between; padding:7px 4px;
+  border-bottom:1px dashed var(--line); font-size:16px;}
+.abgrow .k{color:var(--dim); font-size:13px;} .abgrow .u{color:var(--dim); font-size:11px;}
+.abg-crit{color:var(--red); font-weight:700;} .abg-warn{color:var(--amber); font-weight:700;}
+.abg-ok{color:var(--green);}
+#ventreadout{margin-top:8px; display:none; grid-template-columns:repeat(4,1fr); gap:6px;}
+.vr{border:1px solid var(--line); border-radius:4px; padding:5px 7px; background:#0b1119;}
+.vr .lab{font-size:9px; color:var(--dim); letter-spacing:.5px;}
+.vr .val{font-size:15px; font-weight:700;}
+.vr.ok .val{color:var(--green);} .vr.warn .val{color:var(--amber);} .vr.bad .val{color:var(--red);}
+.vr .band{font-size:9px; color:var(--dim);}
+.vr.ok::after{content:"✓ in range"; font-size:9px; color:var(--green);}
+.vr.warn::after{content:"△ borderline"; font-size:9px; color:var(--amber);}
+.vr.bad::after{content:"✗ out of range"; font-size:9px; color:var(--red);}
+/* ---------- decision station ---------- */
+#decision{padding:12px 14px; overflow:auto; background:var(--panel);}
+#decision h2{font-size:12px; color:var(--green); letter-spacing:2px; margin-bottom:8px;}
+#prompt{font-size:14px; color:var(--white); background:#0b1119; border:1px solid var(--line);
+  border-left:3px solid var(--amber); border-radius:4px; padding:10px 12px; margin-bottom:12px;
+  white-space:pre-line;}
+.opt{display:block; border:1px solid var(--line); border-radius:6px; background:#0b1119;
+  margin-bottom:8px; padding:9px 10px; cursor:pointer;}
+.opt:hover{border-color:var(--cyan);}
+.opt:focus-within{outline:2px solid var(--cyan); outline-offset:1px;}
+.opt input{margin-right:8px; transform:scale(1.15); accent-color:var(--green);}
+.opt .lbl{display:inline;}
+.opt.sel{border-color:var(--green); background:#0d1a14;}
+details.ev{margin-top:6px; font-size:11px;}
+details.ev summary{color:var(--blue); cursor:pointer; list-style:none; display:inline-block;
+  border:1px solid var(--blue); border-radius:3px; padding:1px 8px;}
+details.ev summary::-webkit-details-marker{display:none;}
+details.ev[open] summary{background:var(--blue); color:#061020;}
+details.ev p{margin-top:5px; color:var(--dim); border-left:2px solid var(--blue); padding-left:8px;}
+#commitbar{display:flex; gap:10px; margin-top:10px; align-items:center;}
+#commitbtn{background:var(--green); color:#04220f; border:0; border-radius:5px;
+  padding:9px 22px; font-size:13px; font-weight:700; letter-spacing:1px; cursor:pointer;}
+#commitbtn:disabled{background:#274134; color:#6a8a78; cursor:not-allowed;}
+#nextbtn{display:none; background:var(--cyan); color:#04222a; border:0; border-radius:5px;
+  padding:9px 22px; font-size:13px; font-weight:700; letter-spacing:1px; cursor:pointer;}
+#feedback{margin-top:12px;}
+.fb{border-radius:5px; padding:8px 11px; margin-bottom:7px; font-size:12.5px;}
+.fb.good{border:1px solid var(--green); background:#0d1f15; color:#c9f5db;}
+.fb.bad{border:1px solid var(--red); background:#2a0f12; color:#ffd7d7;}
+.fb.part{border:1px solid var(--amber); background:#241b06; color:#ffe9b8;}
+.fb.info{border:1px solid var(--blue); background:#0d1626; color:#cfe0ff;}
+.fb b{display:block; margin-bottom:2px;}
+/* vent sliders */
+.slid{border:1px solid var(--line); border-radius:6px; background:#0b1119;
+  padding:8px 10px; margin-bottom:8px;}
+.slid label{display:flex; justify-content:space-between; font-size:12px; color:var(--dim);}
+.slid label output{color:var(--white); font-weight:700;}
+.slid input[type=range]{width:100%; accent-color:var(--amber);}
+/* ---------- bottom ---------- */
+#bottom{height:118px; border-top:1px solid var(--line); display:grid;
+  grid-template-columns:minmax(360px,44%) 1fr; background:var(--panel2);}
+#rail{padding:8px 12px; border-right:1px solid var(--line); overflow:auto;}
+#rail .rl{font-size:10px; color:var(--dim); letter-spacing:1px; margin-bottom:6px;}
+#raildots{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+.dot{width:26px; height:26px; border-radius:50%; border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--dim);
+  background:#0b1119;}
+.dot.done{border-color:var(--green); color:var(--green);}
+.dot.cur{border-color:var(--amber); color:var(--amber); box-shadow:0 0 6px #ffb30055;}
+#scenariotag{font-size:11px; color:var(--cyan); margin-top:8px;}
+#debrief{padding:8px 12px; overflow:auto;}
+#debrief .rl{font-size:10px; color:var(--dim); letter-spacing:1px; margin-bottom:4px;}
+#debrieflog{font-size:11px;}
+#debrieflog div{padding:2px 0; border-bottom:1px dotted var(--line);}
+#debrieflog .ok{color:var(--green);} #debrieflog .no{color:var(--red);}
+#debrieflog .pa{color:var(--amber);} #debrieflog .in{color:var(--dim);}
+/* ---------- overlays ---------- */
+.overlay{position:fixed; inset:0; background:rgba(4,7,12,.93); z-index:50;
+  display:flex; align-items:center; justify-content:center; overflow:auto;}
+.card{max-width:760px; width:92%; background:var(--panel); border:1px solid var(--line);
+  border-radius:10px; padding:26px 30px; margin:20px;}
+.card h1{color:var(--green); font-size:20px; letter-spacing:2px; margin-bottom:4px;}
+.card h2{color:var(--amber); font-size:15px; margin:14px 0 8px;}
+.card p{color:var(--dim); font-size:12.5px; margin-bottom:10px;}
+.card ul{margin:0 0 12px 20px; font-size:12.5px;}
+.card li{margin-bottom:6px;}
+.scenbtn{display:block; width:100%; text-align:left; background:#0b1119; color:var(--white);
+  border:1px solid var(--line); border-radius:6px; padding:12px 14px; margin-bottom:8px;
+  font-size:13px; cursor:pointer;}
+.scenbtn:hover:not(:disabled){border-color:var(--green);}
+.scenbtn:disabled{opacity:.45; cursor:not-allowed;}
+.scenbtn .st{color:var(--cyan); font-size:11px; display:block;}
+.scenbtn .done{color:var(--green); font-size:11px;}
+.bigbtn{background:var(--green); color:#04220f; border:0; border-radius:6px;
+  padding:11px 26px; font-size:14px; font-weight:700; letter-spacing:1px; cursor:pointer; margin-top:8px;}
+.ghostbtn{background:transparent; color:var(--cyan); border:1px solid var(--cyan);
+  border-radius:6px; padding:10px 20px; font-size:13px; cursor:pointer; margin:8px 8px 0 0;}
+.disclaim{font-size:10px; color:#5c6f83; margin-top:14px; border-top:1px solid var(--line); padding-top:8px;}
+.kbd{font-size:10px; color:#5c6f83;}
+/* Presenter mode: larger type for projecting to a room */
+#presentbtn,#homebtn{background:transparent; color:#8fa3b8; border:1px solid var(--line);
+  border-radius:3px; padding:2px 8px; font-size:10px; cursor:pointer; margin-top:3px;}
+#homebtn:hover{color:var(--cyan); border-color:var(--cyan);}
+#skipbtn{background:transparent; color:#8fa3b8; border:1px solid var(--line);
+  border-radius:5px; padding:9px 14px; font-size:11px; cursor:pointer; margin-left:auto;}
+#skipbtn:hover{color:var(--amber); border-color:var(--amber);}
+#presentbtn[aria-pressed="true"]{background:var(--amber); color:#241b06; border-color:var(--amber); font-weight:700;}
+body.present{font-size:16px;}
+body.present #prompt{font-size:18px;}
+body.present .opt{font-size:17px; padding:12px;}
+body.present .fb{font-size:15.5px;}
+body.present details.ev{font-size:13px;}
+body.present #debrieflog{font-size:13px;}
+body.present .vtile .val{font-size:22px;}
+body.present .vtile.bp .val{font-size:17px;}
+body.present #commitbtn,body.present #nextbtn{font-size:15px; padding:11px 26px;}
+body.present .card{max-width:900px;}
+body.present .card ul,body.present .card li{font-size:15px;}
+body.present .vr .val{font-size:17px;}
+/* Discussion cards (non-scored, appear after correct commit) */
+.discuss{border:1px solid var(--amber); background:#1a1403; border-radius:6px;
+  padding:10px 12px; margin-top:12px;}
+.discuss h4{color:var(--amber); font-size:11px; letter-spacing:2px; margin-bottom:6px;}
+.discuss .q{color:#ffe9b8; font-size:13px; margin-bottom:8px; white-space:pre-line;}
+.discuss details summary{color:var(--amber); border-color:var(--amber);}
+.discuss details[open] summary{background:var(--amber); color:#241b06;}
+.discuss details p{border-left-color:var(--amber);}
+.discuss textarea{width:100%; background:#0b1119; color:var(--white); border:1px solid var(--line);
+  border-radius:4px; padding:6px 8px; font-family:inherit; font-size:12px; min-height:42px;
+  margin-top:8px; resize:vertical;}
+.discuss .notebtn{background:transparent; color:var(--amber); border:1px solid var(--amber);
+  border-radius:4px; padding:3px 10px; font-size:10px; cursor:pointer; margin-top:5px;}
+body.present .discuss .q{font-size:16px;}
+/* Facilitator guide print view */
+#guideoverlay .card{max-width:940px;}
+.gscene{border-left:2px solid var(--line); padding-left:10px; margin:8px 0; font-size:12px;}
+.gscene ul{margin:4px 0 4px 18px;}
+@media print{
+  body.printguide > :not(#guideoverlay){display:none !important;}
+  body.printguide #guideoverlay{display:block !important; position:static; background:#fff; overflow:visible;}
+  body.printguide #guideoverlay .card{background:#fff; border:0; max-width:100%; width:100%; margin:0; padding:0;}
+  body.printguide #guideoverlay *{color:#000 !important; background:#fff !important;}
+  body.printguide .noprint{display:none !important;}
+  body.printguide .gscen{page-break-after:always;}
+}
+@media (max-width:980px){
+  #stage{grid-template-columns:1fr; grid-template-rows:1fr 1fr;}
+  #datapanel{border-right:0; border-bottom:1px solid var(--line);}
+}
+</style>
+</head>
+<body>
+
+<header id="topbar">
+  <div id="brand">
+    <h1>AIRWAY INTELLIGENCE</h1>
+    <div class="sub">ASTHMA · severe exacerbation simulator</div>
+    <button id="presentbtn" aria-pressed="false"
+      aria-label="Toggle presenter mode with larger text for projection">PRESENTER MODE</button>
+    <button id="homebtn" aria-label="Return to scenario menu">☰ SCENARIOS</button>
+  </div>
+  <div id="scenetitle" aria-live="polite">—</div>
+  <div id="vitalstrip" aria-label="Live vitals monitor">
+    <canvas id="stripEcg" width="240" height="52" aria-hidden="true"></canvas>
+    <div class="vtile hr"><div class="lab">HR</div><div class="val" id="v-hr">--</div></div>
+    <div class="vtile spo2"><div class="lab">SpO2</div><div class="val" id="v-spo2">--</div></div>
+    <div class="vtile bp"><div class="lab">NIBP</div><div class="val" id="v-bp">--/--</div></div>
+    <div class="vtile rr"><div class="lab">RR</div><div class="val" id="v-rr">--</div></div>
+    <div class="vtile etco2"><div class="lab">EtCO2</div><div class="val" id="v-etco2">--</div></div>
+  </div>
+</header>
+
+<main id="stage">
+  <section id="datapanel" aria-label="Physiologic data display">
+    <div id="viztitle">
+      <span class="t" id="vizlabel">MONITOR</span>
+      <span class="simtag">SIMULATED / ILLUSTRATIVE</span>
+      <button id="revealbtn" aria-pressed="false"
+        aria-label="Toggle physiology reveal teaching annotations">PHYSIOLOGY REVEAL</button>
+    </div>
+    <canvas id="viz" width="680" height="440"></canvas>
+    <div id="svgwrap" aria-label="Simulated radiograph"></div>
+    <div id="abgcard" role="table" aria-label="Simulated arterial blood gas"></div>
+    <div id="ventreadout" aria-label="Ventilator computed values"></div>
+  </section>
+
+  <section id="decision" aria-label="Decision station">
+    <h2>DECISION STATION</h2>
+    <div id="prompt" aria-live="polite"></div>
+    <form id="optform"></form>
+    <div id="commitbar">
+      <button id="commitbtn" type="button" aria-label="Commit decision">COMMIT DECISION</button>
+      <button id="nextbtn" type="button" aria-label="Continue to next scene">CONTINUE →</button>
+      <button id="skipbtn" type="button"
+        aria-label="Skip this decision and advance the case along the correct path">SKIP →</button>
+    </div>
+    <div id="feedback" aria-live="polite"></div>
+  </section>
+</main>
+
+<footer id="bottom">
+  <div id="rail">
+    <div class="rl">PROGRESS RAIL</div>
+    <div id="raildots" role="list" aria-label="Scene progress"></div>
+    <div id="scenariotag">—</div>
+  </div>
+  <div id="debrief">
+    <div class="rl">DEBRIEF LOG</div>
+    <div id="debrieflog" aria-live="polite"></div>
+  </div>
+</footer>
+
+<div class="overlay" id="homeoverlay">
+  <div class="card">
+    <h1>AIRWAY INTELLIGENCE — ASTHMA</h1>
+    <p>Simulation-based decision training in severe asthma for pulmonary &amp; critical care
+    fellows. Advance through each case by committing evidence-based decisions. Correct choices
+    advance the case and reveal physiology; unsafe choices trigger teaching feedback and, where
+    clinically true, patient deterioration. Every option carries an Evidence popover.
+    Case details stay concealed until you are in the room — commit decisions to find out
+    what happens. Each debrief reports your first-pass accuracy.</p>
+    <h2>SELECT SCENARIO</h2>
+    <div id="scenlist"></div>
+    <button class="ghostbtn" onclick="showGuide()"
+      aria-label="Open printable facilitator guide, contains answers">
+      FACILITATOR GUIDE (answers &amp; discussion points — instructor only)</button>
+    <p class="kbd">Keyboard: Tab / Shift-Tab to move · Space to select · Enter to commit.
+    Toggle PHYSIOLOGY REVEAL for teaching overlays on waveforms and imaging.</p>
+    <p class="disclaim">Educational simulation. Simulated waveforms/imaging. Not for clinical
+    use. All imagery is computer-generated and illustrative; no real patient images or data.
+    Evidence anchors: GINA 2026 (2025 cycle), critical care literature, ELSO/EOLIA.</p>
+  </div>
+</div>
+
+<div class="overlay" id="endoverlay" style="display:none;">
+  <div class="card" id="endcard"></div>
+</div>
+
+<div class="overlay" id="guideoverlay" style="display:none;">
+  <div class="card" id="guidecard"></div>
+</div>
+
+<script>
+'use strict';
+/* ================================================================
+   PHYSIOLOGY ENGINE (deterministic; dossier target bands)
+   ================================================================ */
+const $  = s => document.querySelector(s);
+const clamp = (v,a,b) => Math.min(b, Math.max(a,v));
+const lerp  = (a,b,t) => a + (b-a)*t;
+const r1 = v => Math.round(v*10)/10;
+const r2 = v => Math.round(v*100)/100;
+
+/* Ventilator model — volume-control assist/control, square-wave flow.
+   Inputs: vt mL, rr /min, flow L/min, peep cmH2O, fio2, raw cmH2O/L/s, crs mL/cmH2O */
+function ventCalc(v){
+  const Ti   = (v.vt/1000) / (v.flow/60);        // s
+  const Ttot = 60 / v.rr;                        // s
+  const Te   = Ttot - Ti;                        // s
+  const IE   = Te / Ti;                          // 1 : IE
+  const VE   = v.vt * v.rr / 1000;               // L/min
+  const tau  = v.raw * (v.crs/1000);             // s  (expiratory time constant)
+  const need = 3 * tau;                          // "complete exhalation needs ~3–5 tau"
+  // dynamic hyperinflation: auto-PEEP grows as Te falls below 3*tau
+  const autoPEEP  = clamp(12 * (need - Te), 0, 25);
+  const totalPEEP = v.peep + autoPEEP;
+  const pplat = totalPEEP + v.vt / v.crs;
+  const ppeak = pplat + v.raw * (v.flow/60);     // resistive drop = Raw * flow
+  const dp    = pplat - totalPEEP;               // driving pressure
+  const grad  = ppeak - pplat;                   // peak-to-plateau gradient
+  const trapFrac = Math.exp(-Te / tau);          // fraction of Vt trapped at end-exp
+  return {Ti, Te, Ttot, IE, VE, tau, need, autoPEEP, totalPEEP,
+          pplat, ppeak, dp, grad, trapFrac, hyper: Te < need};
+}
+
+/* Simulated ABG — simplified Henderson-Hasselbalch.
+   pH = 6.1 + log10(HCO3 / (0.03*PaCO2)). PaCO2 from effective alveolar
+   ventilation; dead-space fraction rises with auto-PEEP (hyperinflation). */
+function abgFromVent(vc, vent, hco3, co2K){
+  const vd  = clamp(0.40 + 0.03*vc.autoPEEP, 0.30, 0.80);
+  const va  = Math.max(vc.VE * (1-vd), 1.2);
+  const paco2 = clamp(co2K / va, 40, 100);          // dossier: 50–90+ tolerated
+  const ph  = clamp(6.1 + Math.log10(hco3/(0.03*paco2)), 7.02, 7.48);
+  return { ph: r2(ph), paco2: Math.round(paco2), hco3: hco3 };
+}
+
+/* ================================================================
+   APP STATE
+   ================================================================ */
+const App = {
+  scen: null, scenIdx: -1, sceneIdx: 0,
+  state: null,           // live clinical state (deep-cloned initialState)
+  disp:  {hr:0, spo2:0, sbp:0, dbp:0, rr:0, etco2:0},   // eased display vitals
+  reveal:false, completed:{}, advanceReady:false,
+  first:{}, missed:[],     // first-pass tracking + wrong choices for the debrief
+  ventLive:null,         // last ventCalc result
+  t0: performance.now()
+};
+
+function deepMerge(dst, src){
+  for(const k in src){
+    if(src[k] && typeof src[k]==='object' && !Array.isArray(src[k])){
+      if(!dst[k] || typeof dst[k]!=='object') dst[k] = {};
+      deepMerge(dst[k], src[k]);
+    } else dst[k] = src[k];
+  }
+  return dst;
+}
+const cloneJ = o => JSON.parse(JSON.stringify(o));
+
+/* ================================================================
+   VITALS STRIP (eased values + scrolling ECG)
+   ================================================================ */
+const ecgC = $('#stripEcg').getContext('2d');
+let alarmOn = false;
+
+function ecgShape(p){ // one cardiac cycle, phase 0..1
+  if(p<0.10) return 0.12*Math.sin(p/0.10*Math.PI);            // P
+  if(p<0.14) return 0;
+  if(p<0.16) return -0.18*((p-0.14)/0.02);                    // Q
+  if(p<0.20) return -0.18 + 1.35*((p-0.16)/0.04);             // R
+  if(p<0.24) return 1.17 - 1.45*((p-0.20)/0.04);              // S
+  if(p<0.34) return -0.28 + 0.28*((p-0.24)/0.10);
+  if(p<0.55) return 0.22*Math.sin((p-0.34)/0.21*Math.PI);     // T
+  return 0;
+}
+function drawStrip(now){
+  const w=240,h=52; ecgC.fillStyle='#050810'; ecgC.fillRect(0,0,w,h);
+  const hr = Math.max(App.disp.hr, 30);
+  const cyc = 60/hr;                       // s per beat
+  ecgC.strokeStyle='#00e676'; ecgC.lineWidth=1.4; ecgC.beginPath();
+  const span = 3.2;                        // seconds shown
+  for(let x=0;x<w;x++){
+    const t = now/1000 - (w-x)*(span/w);
+    const p = ((t%cyc)+cyc)%cyc/cyc;
+    const y = h*0.62 - ecgShape(p)*h*0.42;
+    x?ecgC.lineTo(x,y):ecgC.moveTo(x,y);
+  }
+  ecgC.stroke();
+}
+function updateVitalsStrip(){
+  const tv = App.state ? App.state.vitals : {hr:0,spo2:0,sbp:0,dbp:0,rr:0,etco2:0};
+  const d = App.disp, e=0.04;
+  for(const k of ['hr','spo2','sbp','dbp','rr','etco2']) d[k]=lerp(d[k],tv[k],e);
+  const j = Math.sin(performance.now()/900)*1.2;
+  $('#v-hr').textContent   = Math.round(d.hr+j);
+  $('#v-spo2').textContent = Math.round(d.spo2);
+  $('#v-bp').textContent   = Math.round(d.sbp)+'/'+Math.round(d.dbp);
+  $('#v-rr').textContent   = Math.round(d.rr);
+  $('#v-etco2').textContent= Math.round(d.etco2);
+  const bad = d.spo2<90 || d.sbp<80 || d.hr>140;
+  if(bad!==alarmOn){ alarmOn=bad;
+    document.querySelectorAll('.vtile').forEach(t=>t.classList.toggle('alarm',bad)); }
+}
+
+/* ================================================================
+   LEFT-PANEL RENDERERS  (canvas 680x440)
+   ================================================================ */
+const viz = $('#viz'), vc = viz.getContext('2d');
+const W = 680, H = 440;
+function clearViz(){ vc.fillStyle='#050810'; vc.fillRect(0,0,W,H); }
+function grid(x0,y0,w,h,step){
+  vc.strokeStyle='#0f1a26'; vc.lineWidth=1; vc.beginPath();
+  for(let x=x0;x<=x0+w;x+=step){vc.moveTo(x,y0);vc.lineTo(x,y0+h);}
+  for(let y=y0;y<=y0+h;y+=step){vc.moveTo(x0,y);vc.lineTo(x0+w,y);}
+  vc.stroke();
+}
+function label(txt,x,y,color,size){
+  vc.fillStyle=color||'#8fa3b8'; vc.font=(size||11)+'px monospace'; vc.fillText(txt,x,y);
+}
+function arrow(x1,y1,x2,y2,color){
+  vc.strokeStyle=color; vc.fillStyle=color; vc.lineWidth=1.6;
+  vc.beginPath(); vc.moveTo(x1,y1); vc.lineTo(x2,y2); vc.stroke();
+  const a=Math.atan2(y2-y1,x2-x1);
+  vc.beginPath(); vc.moveTo(x2,y2);
+  vc.lineTo(x2-9*Math.cos(a-0.4), y2-9*Math.sin(a-0.4));
+  vc.lineTo(x2-9*Math.cos(a+0.4), y2-9*Math.sin(a+0.4));
+  vc.closePath(); vc.fill();
+}
+
+/* ---- FLOW-VOLUME LOOP: obstructive scooped expiratory limb.
+   severity 0..1 (from state.severity, driven by Raw/bronchospasm) ---- */
+function drawFlowLoop(now){
+  clearViz();
+  const x0=80,y0=40,w=540,h=350, mid=y0+h*0.58;
+  grid(x0,y0,w,h,30);
+  vc.strokeStyle='#25344a'; vc.lineWidth=1.5;
+  vc.beginPath(); vc.moveTo(x0,mid); vc.lineTo(x0+w,mid); vc.stroke();  // flow=0
+  vc.beginPath(); vc.moveTo(x0,y0); vc.lineTo(x0,y0+h); vc.stroke();
+  label('Flow (L/s)',x0-68,y0+12); label('+Exp',x0-40,y0+40); label('−Insp',x0-44,y0+h-14);
+  label('Volume (L) →  (axes illustrative)',x0+w-240,y0+h+0,'#5c6f83',10);
+  const s = App.state ? App.state.severity : 0.5;
+  const FVC=4.0, PEF=(1-0.62*s)*8;               // illustrative scaling
+  const vx = f=>x0 + (f/FVC)*w*0.92;
+  const fy = f=>mid - f*(h*0.40/8);
+  // expiratory limb: rapid peak then concave ("scooped") decay — concavity grows with severity
+  vc.strokeStyle='#00e676'; vc.lineWidth=2.2; vc.beginPath();
+  const pts=[];
+  for(let i=0;i<=120;i++){
+    const x=i/120;                                // fraction of FVC exhaled
+    let f;
+    if(x<0.06) f=PEF*(x/0.06);
+    else { const u=(x-0.06)/0.94; f=PEF*Math.pow(1-u,1+4.5*s); }
+    pts.push([vx(x*FVC), fy(f)]);
+  }
+  // inspiratory limb: half-ellipse below axis
+  for(let i=0;i<=80;i++){
+    const x=1-i/80;
+    const f=-(1-0.35*s)*4.5*Math.sin(Math.PI*x*0.995);
+    pts.push([vx(x*FVC), fy(f)]);
+  }
+  pts.forEach((p,i)=> i?vc.lineTo(p[0],p[1]):vc.moveTo(p[0],p[1]));
+  vc.stroke();
+  // faint normal (predicted) loop for comparison
+  vc.strokeStyle='rgba(143,163,184,0.28)'; vc.lineWidth=1.2; vc.beginPath();
+  for(let i=0;i<=100;i++){ const x=i/100;
+    const f = x<0.06 ? 8*(x/0.06) : 8*Math.pow(1-(x-0.06)/0.94,1.05);
+    const px=vx(x*FVC), py=fy(f); i?vc.lineTo(px,py):vc.moveTo(px,py); }
+  for(let i=0;i<=60;i++){ const x=1-i/60;
+    const px=vx(x*FVC), py=fy(-4.5*Math.sin(Math.PI*x*0.995));
+    vc.lineTo(px,py); }
+  vc.stroke();
+  label('predicted (reference)',x0+w-190,y0+18,'rgba(143,163,184,0.6)',10);
+  // animated cursor tracing the loop
+  const idx=Math.floor(((now/5200)%1)*pts.length);
+  const cp=pts[Math.min(idx,pts.length-1)];
+  vc.fillStyle='#ffffff'; vc.beginPath(); vc.arc(cp[0],cp[1],4,0,7); vc.fill();
+  if(App.reveal){
+    const ax=vx(1.6*FVC/4), ay=fy(PEF*Math.pow(1-((1.6/4-0.06)/0.94),1+4.5*s));
+    arrow(ax+120,ay+90,ax+12,ay+8,'#26c6da');
+    label('Concave "scooped" expiratory limb =',ax+50,ay+112,'#26c6da',11);
+    label('airflow obstruction; scoop deepens as Raw rises',ax+50,ay+126,'#26c6da',11);
+    label('Severity index (Raw-driven): '+Math.round(s*100)+'%',x0+8,y0+h-8,'#ffb300',11);
+  }
+}
+
+/* ---- VENTILATOR SCALARS: pressure / flow / volume vs time ---- */
+function drawScalars(now){
+  clearViz();
+  const vents = App.state && App.state.vent;
+  if(!vents){ label('No ventilator connected',260,220,'#5c6f83',13); return; }
+  const k = ventCalc(vents); App.ventLive = k;
+  const rows=[ {y0:14,h:126,name:'Paw (cmH2O)',col:'#ffb300'},
+               {y0:158,h:126,name:'Flow (L/min)',col:'#00e676'},
+               {y0:302,h:126,name:'Volume (mL)',col:'#26c6da'} ];
+  const x0=54,w=600;
+  rows.forEach(r=>{ grid(x0,r.y0,w,r.h,24); label(r.name,x0+4,r.y0+13,r.col,10); });
+  const span=Math.max(2.2*k.Ttot,6);           // seconds shown
+  const t2x = t => x0 + (t/span)*w;
+  const tNow=(now/1000)%k.Ttot;
+  // steady-state trapped volume baseline
+  const vTrap = vents.vt*k.trapFrac/(1-k.trapFrac+1e-6);
+  const vTrapC= clamp(vTrap,0,vents.vt*1.4);
+  function wave(t){ // returns {p,f,v} at cycle-time t
+    const tc=((t%k.Ttot)+k.Ttot)%k.Ttot;
+    if(tc<k.Ti){
+      const fr=tc/k.Ti;
+      return { p:k.totalPEEP + vents.raw*(vents.flow/60) + fr*(vents.vt/vents.crs),
+               f:vents.flow, v:vTrapC+vents.vt*fr };
+    }
+    const te=tc-k.Ti;
+    const dec=Math.exp(-te/k.tau);
+    return { p:k.totalPEEP + (vents.vt/vents.crs)*dec*0.35,
+             f:-(vents.vt/1000)/k.tau*60*dec, v:vTrapC+vents.vt*dec };
+  }
+  const pMax=Math.max(k.ppeak*1.15,40), fMax=Math.max(vents.flow*1.25,80),
+        vMax=(vTrapC+vents.vt)*1.2;
+  vc.lineWidth=2;
+  [['p',0,pMax,'#ffb300'],['f',1,fMax,'#00e676'],['v',2,vMax,'#26c6da']].forEach(([key,ri,max,col])=>{
+    const r=rows[ri];
+    const mid = key==='f' ? r.y0+r.h*0.5 : r.y0+r.h-8;
+    vc.strokeStyle='#25344a'; vc.beginPath(); vc.moveTo(x0,mid); vc.lineTo(x0+w,mid); vc.stroke();
+    vc.strokeStyle=col; vc.beginPath();
+    for(let x=0;x<=w;x++){
+      const t=(x/w)*span - (k.Ttot - tNow);
+      const s0=wave(t);
+      let y;
+      if(key==='f') y=mid - (s0.f/max)*(r.h*0.42);
+      else y=mid - (s0[key]/max)*(r.h-16);
+      x?vc.lineTo(x0+x,y):vc.moveTo(x0+x,y);
+    }
+    vc.stroke();
+  });
+  // numeric read
+  label('Ppeak '+r1(k.ppeak)+'   Pplat '+r1(k.pplat)+'   totalPEEP '+r1(k.totalPEEP),x0+250,rows[0].y0+13,'#ffb300',10);
+  label('Ti '+r2(k.Ti)+'s  Te '+r2(k.Te)+'s  I:E 1:'+r1(k.IE)+'  tau '+r2(k.tau)+'s',x0+250,rows[1].y0+13,'#00e676',10);
+  if(App.reveal){
+    // peak-to-plateau caliper on pressure trace
+    const r=rows[0], mid=r.y0+r.h-8;
+    const yPk = mid-(k.ppeak/pMax)*(r.h-16), yPl = mid-(k.pplat/pMax)*(r.h-16);
+    const cx=x0+w-120;
+    vc.strokeStyle='#26c6da'; vc.lineWidth=1.4;
+    vc.beginPath(); vc.moveTo(cx,yPk); vc.lineTo(cx,yPl); vc.stroke();
+    vc.beginPath(); vc.moveTo(cx-6,yPk); vc.lineTo(cx+6,yPk); vc.moveTo(cx-6,yPl); vc.lineTo(cx+6,yPl); vc.stroke();
+    label('peak−plateau '+r1(k.grad)+' = RESISTIVE (large in asthma)',cx-215,yPl-6,'#26c6da',10);
+    // end-expiratory hold marker
+    label('▼ end-expiratory hold → auto-PEEP '+r1(k.autoPEEP),x0+8,rows[0].y0+r.h-2,'#ff8a65',10);
+    if(k.hyper){
+      const r2f=rows[1], midf=r2f.y0+r2f.h*0.5;
+      arrow(x0+120,midf+52,x0+40,midf+16,'#ff8a65');
+      label('Expiratory flow NOT returning to zero before next breath = auto-PEEP',
+            x0+126,midf+56,'#ff8a65',10);
+      label('Te '+r2(k.Te)+'s < 3·tau '+r2(k.need)+'s → DYNAMIC HYPERINFLATION',
+            x0+126,midf+70,'#ff8a65',10);
+    } else {
+      label('Te '+r2(k.Te)+'s ≥ 3·tau '+r2(k.need)+'s → complete exhalation',
+            x0+8,rows[1].y0+rows[1].h-4,'#00e676',10);
+    }
+  }
+}
+
+/* ---- MONITOR view: large vitals + ECG + pleth ---- */
+function drawMonitor(now){
+  clearViz();
+  const d=App.disp;
+  const hr=Math.max(d.hr,30), cyc=60/hr;
+  grid(20,20,640,180,30);
+  vc.strokeStyle='#00e676'; vc.lineWidth=2; vc.beginPath();
+  for(let x=0;x<640;x++){
+    const t=now/1000-(640-x)*(5/640);
+    const p=((t%cyc)+cyc)%cyc/cyc;
+    const y=110-ecgShape(p)*72;
+    x?vc.lineTo(20+x,y):vc.moveTo(20+x,y);
+  }
+  vc.stroke(); label('II',26,38,'#00e676',12);
+  grid(20,215,640,110,30);
+  vc.strokeStyle='#26c6da'; vc.lineWidth=2; vc.beginPath();
+  for(let x=0;x<640;x++){
+    const t=now/1000-(640-x)*(5/640);
+    const p=((t%cyc)+cyc)%cyc/cyc;
+    const y=300-Math.pow(Math.sin(Math.PI*Math.min(p*1.6,1)),2)*58*(d.spo2/100);
+    x?vc.lineTo(20+x,y):vc.moveTo(20+x,y);
+  }
+  vc.stroke(); label('Pleth',26,232,'#26c6da',12);
+  vc.fillStyle='#00e676'; vc.font='bold 40px monospace'; vc.fillText(Math.round(d.hr),40,400);
+  label('HR',40,352,'#8fa3b8',12);
+  vc.fillStyle='#26c6da'; vc.fillText(Math.round(d.spo2),200,400); label('SpO2',200,352,'#8fa3b8',12);
+  vc.fillStyle='#ff5252'; vc.font='bold 30px monospace';
+  vc.fillText(Math.round(d.sbp)+'/'+Math.round(d.dbp),340,396); label('NIBP',340,352,'#8fa3b8',12);
+  vc.fillStyle='#ffb300'; vc.font='bold 40px monospace'; vc.fillText(Math.round(d.etco2),560,400);
+  label('EtCO2',560,352,'#8fa3b8',12);
+}
+
+/* ---- LUNG ULTRASOUND: B-mode sliding + M-mode seashore/barcode/lung point ---- */
+let usSeed=[];
+for(let i=0;i<900;i++) usSeed.push(Math.random());
+function drawUS(now){
+  clearViz();
+  const o=(App.state && App.state.imaging && App.state.imaging.us)||{sliding:true,mmode:'seashore',side:''};
+  label('LINEAR PROBE 5–12 MHz · 2nd–4th ICS MCL · '+(o.side||''),20,18,'#8fa3b8',11);
+  // ---- B-mode sector (top) ----
+  const bx=40,by=30,bw=600,bh=170;
+  vc.save(); vc.beginPath(); vc.rect(bx,by,bw,bh); vc.clip();
+  vc.fillStyle='#0a0f16'; vc.fillRect(bx,by,bw,bh);
+  const pleuraY=by+62;
+  // chest wall speckle (static)
+  for(let i=0;i<300;i++){
+    const rx=bx+usSeed[i]*bw, ry=by+usSeed[(i+13)%900]*(pleuraY-by-6);
+    vc.fillStyle='rgba(200,215,230,'+(0.05+usSeed[(i+31)%900]*0.16)+')';
+    vc.fillRect(rx,ry,2,2);
+  }
+  // pleural line (bright)
+  vc.strokeStyle='rgba(235,245,255,0.95)'; vc.lineWidth=3;
+  vc.beginPath(); vc.moveTo(bx,pleuraY); vc.lineTo(bx+bw,pleuraY); vc.stroke();
+  // sub-pleural: sliding = shimmering speckle; no sliding = static faint A-lines
+  const slidePhase = o.sliding ? Math.sin(now/260)*6 : 0;
+  for(let i=300;i<720;i++){
+    const rx=bx+((usSeed[i]*bw + (o.sliding? slidePhase*usSeed[(i+7)%900]*8 :0))%bw);
+    const ry=pleuraY+6+usSeed[(i+13)%900]*(bh-(pleuraY-by)-10);
+    vc.fillStyle='rgba(190,205,225,'+(o.sliding?0.05+usSeed[(i+31)%900]*0.13:0.03+usSeed[(i+31)%900]*0.05)+')';
+    vc.fillRect(rx,ry,2,2);
+  }
+  // A-lines (reverberation)
+  for(let a=1;a<=2;a++){
+    vc.strokeStyle='rgba(220,232,246,'+(0.28-a*0.1)+')'; vc.lineWidth=1.6;
+    vc.beginPath(); vc.moveTo(bx,pleuraY+a*(pleuraY-by)); vc.lineTo(bx+bw,pleuraY+a*(pleuraY-by)); vc.stroke();
+  }
+  if(o.blines){
+    vc.strokeStyle='rgba(230,242,255,0.5)'; vc.lineWidth=4;
+    vc.beginPath(); vc.moveTo(bx+bw*0.7,pleuraY); vc.lineTo(bx+bw*0.7,by+bh); vc.stroke();
+  }
+  vc.restore();
+  label('B-mode'+(o.sliding?' · lung sliding PRESENT':' · lung sliding ABSENT'),bx+4,by+bh+14,
+        o.sliding?'#00e676':'#ff5252',11);
+  // ---- M-mode (bottom) ----
+  const mx=40,my=230,mw=600,mh=180;
+  vc.fillStyle='#0a0f16'; vc.fillRect(mx,my,mw,mh);
+  const mPleura=my+58;
+  const sweep=(now/40)%mw;
+  for(let x=0;x<mw;x++){
+    let mode=o.mmode;
+    if(mode==='lungpoint'){
+      // lung point: alternation between seashore & barcode with respiration
+      const phase=Math.sin((x+now/28)/46);
+      mode = phase>0 ? 'seashore' : 'barcode';
+    }
+    // above pleura: always static horizontal lines (chest wall)
+    for(let y=my;y<mPleura;y+=5){
+      const iL=(x*7+y*13)%900;
+      vc.fillStyle='rgba(205,220,235,'+(0.10+usSeed[iL]*0.16)+')';
+      vc.fillRect(mx+x,y,1,2.4);
+    }
+    vc.fillStyle='rgba(240,248,255,0.95)'; vc.fillRect(mx+x,mPleura,1,2.6);
+    // below pleura
+    if(mode==='seashore'){
+      for(let y=mPleura+4;y<my+mh;y+=3){
+        const iS=(x*31+y*17)%900;
+        vc.fillStyle='rgba(200,214,230,'+(0.05+usSeed[iS]*0.20)+')';
+        vc.fillRect(mx+x,y,1,1.6);
+      }
+    } else { // barcode / stratosphere: horizontal lines all the way down
+      for(let y=mPleura+4;y<my+mh;y+=6){
+        const iB=(y*13)%900;
+        vc.fillStyle='rgba(205,220,235,'+(0.10+usSeed[iB]*0.16)+')';
+        vc.fillRect(mx+x,y,1,2.4);
+      }
+    }
+  }
+  vc.strokeStyle='rgba(255,179,0,0.7)'; vc.lineWidth=1;
+  vc.beginPath(); vc.moveTo(mx+sweep,my); vc.lineTo(mx+sweep,my+mh); vc.stroke();
+  const mlab = o.mmode==='seashore' ? 'M-mode: SEASHORE sign (normal)' :
+               o.mmode==='barcode'  ? 'M-mode: BARCODE / STRATOSPHERE sign' :
+               'M-mode: transition point — seashore ⇄ barcode';
+  label(mlab,mx+4,my+mh+16,o.mmode==='seashore'?'#00e676':'#ffb300',11);
+  if(App.reveal){
+    const noteY=my+16;
+    if(o.mmode==='barcode' && !o.lungpoint){
+      vc.fillStyle='rgba(5,8,16,0.82)'; vc.fillRect(mx+2,noteY-12,590,16);
+      label('No lung point found on scan — think NON-VENTILATED LUNG (mainstem/atelectasis), not PTX',
+            mx+6,noteY,'#26c6da',11);
+    }
+    if(o.mmode==='lungpoint'){
+      vc.fillStyle='rgba(5,8,16,0.82)'; vc.fillRect(mx+2,noteY-12,420,16);
+      label('LUNG POINT: pathognomonic for pneumothorax (spec 99–100%)',mx+6,noteY,'#26c6da',11);
+    }
+    if(o.blines) label('▼ B-line: one B-line EXCLUDES PTX at this interspace',bx+bw*0.7-90,by-2,'#26c6da',10);
+  }
+}
+/* ================================================================
+   SIMULATED SUPINE CXR (layered SVG; radiographic density via
+   radial gradients — simulated/illustrative, not a real image)
+   opts: {ett:'none'|'normal'|'mainstem', ptx:false|'tension',
+          leftCollapse:bool, shift:'none'|'left'|'right', deepSulcus:bool}
+   Patient RIGHT = viewer LEFT.
+   ================================================================ */
+function cxrSVG(o){
+  o = o || {};
+  const shift = o.shift==='left' ? 26 : (o.shift==='right' ? -26 : 0);
+  const rLungDark = o.ptx ? 0.97 : 0.80;                 // more lucent if PTX
+  const lLungDark = o.leftCollapse ? 0.30 : 0.80;        // whiter if collapsed
+  // ETT path: down trachea; mainstem = continues past carina into right bronchus
+  const carinaY = 205;
+  let ett = '';
+  if(o.ett && o.ett!=='none'){
+    const tipY = o.ett==='mainstem' ? 258 : 175;
+    let d = 'M340,52 L340,'+Math.min(tipY,carinaY);
+    if(o.ett==='mainstem') d += ' L318,236 L305,'+tipY;
+    ett = '<path d="'+d+'" stroke="rgba(240,248,255,0.95)" stroke-width="7" fill="none" stroke-linecap="round"/>' +
+          '<path d="'+d+'" stroke="rgba(120,150,180,0.5)" stroke-width="11" fill="none" stroke-linecap="round"/>';
+  }
+  let ribs='';
+  for(let i=0;i<8;i++){
+    const y=95+i*40;
+    ribs += '<path d="M'+(120+shift*0.3)+','+(y+26)+' Q340,'+(y-22)+' '+(560+shift*0.3)+','+(y+26)+'" stroke="rgba(215,225,240,0.30)" stroke-width="9" fill="none"/>';
+  }
+  const sulcus = o.deepSulcus ?
+    '<path d="M96,398 L200,430 L96,432 Z" fill="rgba(2,4,8,0.92)"/>'+
+    '<path d="M96,398 L200,430" stroke="rgba(2,4,8,0.9)" stroke-width="4" fill="none"/>' : '';
+  const collapsedEdge = o.ptx ?
+    '<path d="M262,120 Q300,240 268,390" stroke="rgba(225,235,248,0.55)" stroke-width="2.5" fill="none" stroke-dasharray="5 4"/>'+
+    '<ellipse cx="298" cy="250" rx="52" ry="130" fill="rgba(190,205,225,0.28)"/>' : '';
+  const reveal = App.reveal ? cxrAnnotations(o) : '';
+  return '<svg viewBox="0 0 680 470" role="img" aria-label="Simulated supine chest radiograph">' +
+  '<defs>' +
+  '<radialGradient id="rl" cx="50%" cy="45%" r="75%">' +
+    '<stop offset="0%" stop-color="rgba(5,8,14,'+rLungDark+')"/>' +
+    '<stop offset="85%" stop-color="rgba(30,40,55,0.55)"/>' +
+    '<stop offset="100%" stop-color="rgba(60,72,90,0.4)"/></radialGradient>' +
+  '<radialGradient id="ll" cx="50%" cy="45%" r="75%">' +
+    '<stop offset="0%" stop-color="rgba(5,8,14,'+lLungDark+')"/>' +
+    '<stop offset="85%" stop-color="rgba(30,40,55,0.55)"/>' +
+    '<stop offset="100%" stop-color="rgba(60,72,90,0.4)"/></radialGradient>' +
+  '<radialGradient id="soft" cx="50%" cy="50%" r="70%">' +
+    '<stop offset="0%" stop-color="#232e3e"/><stop offset="100%" stop-color="#151d29"/></radialGradient>' +
+  '<filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="n"/>' +
+    '<feColorMatrix in="n" type="matrix" values="0 0 0 0 0.8 0 0 0 0 0.85 0 0 0 0 0.9 0 0 0 0.05 0"/>' +
+    '<feComposite operator="over" in2="SourceGraphic"/></filter>' +
+  '</defs>' +
+  '<rect width="680" height="470" fill="#03050a"/>' +
+  '<g filter="url(#noise)">' +
+  '<ellipse cx="340" cy="245" rx="270" ry="225" fill="url(#soft)"/>' +               // thorax soft tissue
+  '<ellipse cx="'+(212+shift)+'" cy="245" rx="118" ry="165" fill="url(#rl)"/>' +     // right lung (viewer L)
+  '<ellipse cx="'+(468+shift)+'" cy="245" rx="118" ry="165" fill="url(#ll)"/>' +     // left lung
+  (o.ptx ? '<ellipse cx="'+(196+shift)+'" cy="245" rx="128" ry="175" fill="rgba(1,2,5,0.55)"/>' : '') +
+  collapsedEdge + ribs +
+  '<rect x="330" y="40" width="20" height="170" fill="rgba(6,10,16,0.75)" rx="9"/>' + // tracheal air column
+  '<path d="M340,'+carinaY+' L300,246 M340,'+carinaY+' L382,242" stroke="rgba(10,15,24,0.8)" stroke-width="12" fill="none" stroke-linecap="round"/>' +
+  '<ellipse cx="'+(392+shift)+'" cy="290" rx="92" ry="105" fill="rgba(200,212,228,0.42)"/>' + // heart
+  '<path d="M96,392 Q212,352 330,398 L330,470 L96,470 Z" fill="rgba(205,216,232,0.45)"/>' +   // R diaphragm
+  '<path d="M350,398 Q470,356 585,396 L585,470 L350,470 Z" fill="rgba(205,216,232,0.45)"/>' + // L diaphragm
+  sulcus + ett +
+  '</g>' +
+  '<text x="24" y="36" fill="#cfe0ff" font-size="20" font-family="monospace">R</text>' +
+  '<text x="640" y="36" fill="#cfe0ff" font-size="20" font-family="monospace">L</text>' +
+  '<text x="24" y="458" fill="#5c6f83" font-size="11" font-family="monospace">SUPINE AP · SIMULATED RADIOGRAPH (illustrative)</text>' +
+  reveal + '</svg>';
+}
+function cxrAnnotations(o){
+  let a='';
+  const A=(x1,y1,x2,y2,txt,tx,ty)=>
+    '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="#26c6da" stroke-width="2"/>'+
+    '<circle cx="'+x2+'" cy="'+y2+'" r="3.5" fill="#26c6da"/>'+
+    '<text x="'+tx+'" y="'+ty+'" fill="#26c6da" font-size="13" font-family="monospace">'+txt+'</text>';
+  a += '<line x1="300" y1="205" x2="382" y2="205" stroke="rgba(38,198,218,0.55)" stroke-dasharray="4 3" stroke-width="1.5"/>'+
+       '<text x="392" y="209" fill="rgba(38,198,218,0.8)" font-size="11" font-family="monospace">carina</text>';
+  if(o.ett==='mainstem')
+    a += A(120,120,308,252,'ETT tip BELOW carina → right mainstem',60,105);
+  else if(o.ett==='normal')
+    a += A(120,120,336,172,'ETT tip 2–6 cm above carina ✓',60,105);
+  if(o.leftCollapse) a += A(600,150,470,220,'L volume loss (opacified)',430,130);
+  if(o.ptx) a += A(90,220,180,235,'lucent, no lung markings',40,200);
+  if(o.deepSulcus) a += A(80,360,140,414,'DEEP SULCUS sign',40,345);
+  if(o.shift==='left') a += A(600,300,430,285,'mediastinal shift AWAY',450,320);
+  return a;
+}
+
+/* ================================================================
+   ABG CARD + VENT READOUT
+   ================================================================ */
+function abgClass(k,v){
+  if(k==='ph')    return v<7.20?'abg-crit':(v<7.35||v>7.45)?'abg-warn':'abg-ok';
+  if(k==='paco2') return v>=60?'abg-crit':(v>45||v<35)?'abg-warn':'abg-ok';
+  if(k==='pao2')  return v<60?'abg-crit':v<80?'abg-warn':'abg-ok';
+  return 'abg-ok';
+}
+function renderABG(){
+  const a = App.state && App.state.abg;
+  const el = $('#abgcard');
+  if(!a){ el.innerHTML='<h3>ABG — not yet drawn</h3>'; return; }
+  const rows=[['pH',a.ph,'',,'ph'],['PaCO2',a.paco2,'mmHg','paco2'],
+              ['PaO2',a.pao2,'mmHg','pao2'],['HCO3−',a.hco3,'mEq/L','hco3']];
+  el.innerHTML = '<h3>SIMULATED ARTERIAL BLOOD GAS</h3>' + rows.map(r=>{
+    const key=r[3]||r[4]||'';
+    return '<div class="abgrow"><span class="k">'+r[0]+'</span>'+
+      '<span class="'+abgClass(key,r[1])+'">'+r[1]+' <span class="u">'+(r[2]||'')+'</span></span></div>';
+  }).join('') +
+  (App.state.abgNote?'<p style="margin-top:10px;font-size:11px;color:#8fa3b8;">'+App.state.abgNote+'</p>':'');
+}
+/* Dossier target bands for the vent readout (S5 optimization) */
+const BANDS = {
+  vt:   {lo:450, hi:600, txt:'6–8 mL/kg PBW (75 kg)'},
+  rr:   {lo:10,  hi:14,  txt:'10–14 /min'},
+  flow: {lo:60,  hi:100, txt:'60–100 L/min square'},
+  peep: {lo:0,   hi:5,   txt:'set PEEP 0–5'},
+  VE:   {hi:10,  txt:'≤10 L/min (often 6–8)'},
+  IE:   {lo:3,   txt:'I:E ≥ 1:3–1:4'},
+  pplat:{hi:30,  txt:'≤25–30 cmH2O'},
+  dp:   {hi:15,  txt:'ΔP ≤14–15'},
+  ph:   {lo:7.20,txt:'tolerate pH ≥7.20'}
+};
+function bandClass(key,v){
+  const b=BANDS[key]; if(!b) return 'ok';
+  if(b.lo!==undefined && v<b.lo) return key==='ph'?'bad':'bad';
+  if(b.hi!==undefined && v>b.hi) return 'bad';
+  if(b.hi!==undefined && v>b.hi*0.92) return 'warn';
+  return 'ok';
+}
+function renderVentReadout(){
+  const el=$('#ventreadout');
+  const vents=App.state && App.state.vent;
+  if(!vents){ el.style.display='none'; return; }
+  const k=ventCalc(vents); App.ventLive=k;
+  const abg = App.state.dynAbg ? abgFromVent(k,vents,App.state.abg.hco3,App.state.co2K) : null;
+  if(abg){ App.state.abg.ph=abg.ph; App.state.abg.paco2=abg.paco2; }
+  const cells=[
+    ['Vt',vents.vt+' mL','vt',vents.vt],
+    ['RR set',vents.rr+' /min','rr',vents.rr],
+    ['Flow',vents.flow+' L/min','flow',vents.flow],
+    ['set PEEP',vents.peep+' cm','peep',vents.peep],
+    ['VE',r1(k.VE)+' L/min','VE',k.VE],
+    ['I:E','1:'+r1(k.IE),'IE',k.IE],
+    ['Ppeak',r1(k.ppeak)+' cm',null,0],
+    ['Pplat',r1(k.pplat)+' cm','pplat',k.pplat],
+    ['auto-PEEP',r1(k.autoPEEP)+' cm',null,0],
+    ['ΔP',r1(k.dp)+' cm','dp',k.dp],
+    ['tau',r2(k.tau)+' s',null,0],
+    ['Te vs 3·tau',r2(k.Te)+' / '+r2(k.need)+' s',null,0]
+  ];
+  el.style.display='grid';
+  el.innerHTML = cells.map(c=>{
+    const cls=c[2]?bandClass(c[2],c[3]):'';
+    const band=c[2]&&BANDS[c[2]]?'<div class="band">'+BANDS[c[2]].txt+'</div>':'';
+    return '<div class="vr '+cls+'"><div class="lab">'+c[0]+'</div><div class="val">'+c[1]+'</div>'+band+'</div>';
+  }).join('');
+}
+
+/* ================================================================
+   VIEW SWITCHING + rAF LOOP
+   ================================================================ */
+let curView='monitor';
+const VIEWLABELS={flowloop:'FLOW-VOLUME LOOP',scalars:'VENTILATOR SCALARS',
+  cxr:'CHEST RADIOGRAPH',us:'LUNG ULTRASOUND',abg:'ARTERIAL BLOOD GAS',
+  monitor:'MONITOR',ventpanel:'VENTILATOR SCALARS + COMPUTED MECHANICS'};
+function setView(v){
+  curView=v;
+  $('#vizlabel').textContent=VIEWLABELS[v]||v.toUpperCase();
+  viz.style.display        =(v==='cxr'||v==='abg')?'none':'block';
+  $('#svgwrap').style.display=(v==='cxr')?'block':'none';
+  $('#abgcard').style.display=(v==='abg')?'block':'none';
+  if(v==='cxr') $('#svgwrap').innerHTML=cxrSVG(App.state&&App.state.imaging&&App.state.imaging.cxr||{});
+  if(v==='abg') renderABG();
+  renderVentReadout();
+}
+function frame(now){
+  updateVitalsStrip(); drawStrip(now);
+  if(curView==='flowloop') drawFlowLoop(now);
+  else if(curView==='scalars'||curView==='ventpanel') drawScalars(now);
+  else if(curView==='us') drawUS(now);
+  else if(curView==='monitor') drawMonitor(now);
+  requestAnimationFrame(frame);
+}
+
+/* ================================================================
+   SCENARIO RUNNER
+   ================================================================ */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+function startScenario(idx){
+  App.scenIdx=idx; App.scen=SCENARIOS[idx]; App.sceneIdx=0;
+  App.state=cloneJ(App.scen.initialState);
+  App.first={}; App.missed=[];
+  $('#homeoverlay').style.display='none'; $('#endoverlay').style.display='none';
+  $('#scenariotag').textContent='SCENARIO '+(idx+1)+' / '+SCENARIOS.length+' — '+App.scen.title;
+  logLine('in','━━ SCENARIO '+(idx+1)+': '+App.scen.title+' ━━');
+  renderScene();
+}
+function curScene(){ return App.scen.scenes[App.sceneIdx]; }
+
+function renderScene(){
+  const sc=curScene();
+  App.advanceReady=false;
+  $('#scenetitle').textContent=App.scen.title+' · Scene '+(App.sceneIdx+1)+'/'+App.scen.scenes.length;
+  $('#prompt').textContent=sc.prompt;
+  $('#feedback').innerHTML='';
+  $('#nextbtn').style.display='none';
+  $('#commitbtn').style.display='inline-block';
+  $('#commitbtn').disabled=false;
+  const form=$('#optform');
+  if(sc.type==='vent'){ renderVentScene(sc); }
+  else{
+    const inputType = sc.type==='single'?'radio':'checkbox';
+    form.innerHTML = sc.options.map(o=>
+      '<label class="opt"><input type="'+inputType+'" name="opt" value="'+o.id+'" '+
+      'aria-label="'+esc(o.label)+'"><span class="lbl">'+esc(o.label)+'</span>'+
+      '<details class="ev"><summary aria-label="Show evidence basis">Evidence</summary>'+
+      '<p>['+esc(o.evidence)+']</p></details></label>').join('');
+    form.querySelectorAll('input').forEach(i=>i.addEventListener('change',()=>{
+      form.querySelectorAll('label.opt').forEach(l=>
+        l.classList.toggle('sel',l.querySelector('input').checked));
+    }));
+  }
+  setView(sc.dataView);
+  updateRail();
+}
+
+/* interactive ventilator scene (S5) */
+function renderVentScene(sc){
+  const v=App.state.vent;
+  const sliders=[
+    ['vt','Tidal volume Vt (mL)',300,700,10],
+    ['rr','Respiratory rate (/min)',6,26,1],
+    ['flow','Insp flow, square (L/min)',40,120,5],
+    ['peep','Set PEEP (cmH2O)',0,12,1]
+  ];
+  $('#optform').innerHTML =
+    '<div class="fb info"><b>Adjust the ventilator.</b> All readouts on the left update live '+
+    '(green ✓ = inside dossier target band). Commit when your strategy is safe: controlled '+
+    'hypoventilation / permissive hypercapnia.'+
+    '<details class="ev"><summary>Evidence</summary><p>['+esc(sc.evidence)+']</p></details></div>'+
+    sliders.map(s=>
+      '<div class="slid"><label for="sl-'+s[0]+'">'+s[1]+
+      '<output id="out-'+s[0]+'">'+v[s[0]]+'</output></label>'+
+      '<input type="range" id="sl-'+s[0]+'" min="'+s[2]+'" max="'+s[3]+'" step="'+s[4]+
+      '" value="'+v[s[0]]+'" aria-label="'+s[1]+'"></div>').join('');
+  sliders.forEach(s=>{
+    $('#sl-'+s[0]).addEventListener('input',e=>{
+      v[s[0]]=+e.target.value;
+      $('#out-'+s[0]).textContent=e.target.value;
+      renderVentReadout();
+    });
+  });
+}
+function ventTargetsMet(){
+  const k=App.ventLive, v=App.state.vent;
+  if(!k) return false;
+  return v.vt>=450&&v.vt<=600 && v.rr>=10&&v.rr<=14 && v.flow>=60&&v.flow<=100 &&
+         v.peep<=5 && k.VE<=10 && k.IE>=3 && k.pplat<=30 && k.dp<=15;
+}
+
+function commit(){
+  const sc=curScene();
+  if(sc.type==='vent'){ commitVent(sc); return; }
+  const sel=[...document.querySelectorAll('#optform input:checked')].map(i=>i.value);
+  if(!sel.length){ flash('Select at least one option before committing.'); return; }
+  const fb=$('#feedback'); fb.innerHTML='';
+  let advance=true, anyBad=false;
+  const req=sc.requiredToAdvance||sc.options.filter(o=>o.correct===true).map(o=>o.id);
+  sel.forEach(id=>{
+    const o=sc.options.find(x=>x.id===id);
+    const cls=o.correct===true?'good':o.correct==='partial'?'part':'bad';
+    const icon=o.correct===true?'✓':o.correct==='partial'?'△':'✗';
+    fb.insertAdjacentHTML('beforeend','<div class="fb '+cls+'"><b>'+icon+' '+esc(o.label)+
+      '</b>'+esc(o.feedback)+' <span style="opacity:.75">['+esc(o.evidence)+']</span></div>');
+    logLine(o.correct===true?'ok':o.correct==='partial'?'pa':'no',
+      'Scene '+(App.sceneIdx+1)+' '+icon+' '+o.label);
+    if(o.correct===false){
+      anyBad=true; advance=false;
+      if(!App.missed.includes(o.label)) App.missed.push(o.label);
+      if(o.effect&&o.effect.deterioration){
+        deepMerge(App.state,o.effect.deterioration);
+        fb.insertAdjacentHTML('beforeend',
+          '<div class="fb bad"><b>⚠ PATIENT DETERIORATES</b>Watch the monitor — reassess and correct your decision.</div>');
+      }
+    }
+  });
+  if(sc.type==='single'){
+    const o=sc.options.find(x=>x.id===sel[0]);
+    advance=(o.correct===true||o.correct==='partial');
+  } else {
+    const missing=req.filter(id=>!sel.includes(id));
+    if(missing.length){
+      advance=false;
+      fb.insertAdjacentHTML('beforeend','<div class="fb info"><b>Incomplete bundle.</b>'+
+        missing.length+' evidence-based intervention(s) still missing — review the unchecked options.</div>');
+    }
+    if(anyBad) advance=false;
+  }
+  // first-pass scoring: clean only if the FIRST commit advanced with all-correct picks
+  if(App.first[sc.id]===undefined)
+    App.first[sc.id] = advance && sel.every(id=>sc.options.find(x=>x.id===id).correct===true);
+  if(advance){
+    // apply effects of all correct/partial selections
+    sel.forEach(id=>{ const o=sc.options.find(x=>x.id===id);
+      if(o.correct!==false && o.effect) applyEffect(o.effect); });
+    if(sc.onAdvanceNote) fb.insertAdjacentHTML('beforeend',
+      '<div class="fb info">'+esc(sc.onAdvanceNote)+'</div>');
+    // distractor teaching: reveal the rationale for every option, chosen or not
+    fb.insertAdjacentHTML('beforeend',
+      '<details class="ev" style="margin-top:6px"><summary>Review all options</summary>'+
+      sc.options.map(o=>{
+        const ic=o.correct===true?'✓':o.correct==='partial'?'△':'✗';
+        return '<p><b>'+ic+' '+esc(o.label)+'</b><br>'+esc(o.feedback)+
+               ' <span style="opacity:.75">['+esc(o.evidence)+']</span></p>';}).join('')+
+      '</details>');
+    fb.insertAdjacentHTML('beforeend',discussHTML(sc)); wireDiscuss();
+    showNext();
+  }
+  setView(sc.dataView); // refresh cxr/abg snapshots after effects
+}
+function commitVent(sc){
+  const fb=$('#feedback'); fb.innerHTML='';
+  renderVentReadout();
+  const k=App.ventLive;
+  const met=ventTargetsMet();
+  if(App.first[sc.id]===undefined) App.first[sc.id]=met;
+  if(!met && !App.missed.includes('Ventilator strategy needed rework'))
+    App.missed.push('Ventilator strategy needed rework');
+  if(met){
+    applyEffect(sc.effectOnSuccess||{});
+    fb.insertAdjacentHTML('beforeend','<div class="fb good"><b>✓ Strategy accepted — controlled '+
+      'hypoventilation.</b>VE '+r1(k.VE)+' L/min, I:E 1:'+r1(k.IE)+', Pplat '+r1(k.pplat)+
+      ', auto-PEEP '+r1(k.autoPEEP)+'. PaCO2 is allowed to rise (permissive hypercapnia, tolerate pH ≥7.20); '+
+      'the PRIMARY determinant of hyperinflation is minute ventilation. '+
+      '<span style="opacity:.75">['+esc(sc.evidence)+']</span></div>');
+    logLine('ok','Scene '+(App.sceneIdx+1)+' ✓ vent optimized: VE '+r1(k.VE)+', I:E 1:'+r1(k.IE)+', Pplat '+r1(k.pplat));
+    fb.insertAdjacentHTML('beforeend',discussHTML(sc)); wireDiscuss();
+    showNext();
+  } else {
+    const probs=[];
+    const v=App.state.vent;
+    if(k.VE>10) probs.push('VE '+r1(k.VE)+' >10 L/min — minute ventilation is the PRIMARY driver of dynamic hyperinflation');
+    if(k.IE<3) probs.push('I:E 1:'+r1(k.IE)+' — target ≥1:3 to 1:4; raise inspiratory flow or drop RR to lengthen Te');
+    if(k.pplat>30) probs.push('Pplat '+r1(k.pplat)+' >30 cmH2O (safety parameter ≤25–30)');
+    if(k.dp>15) probs.push('ΔP '+r1(k.dp)+' >14–15');
+    if(v.peep>5) probs.push('Set PEEP '+v.peep+' — keep 0–5; external PEEP may worsen hyperinflation in asthma');
+    if(v.vt<450||v.vt>600) probs.push('Vt '+v.vt+' outside 6–8 mL/kg PBW (450–600 mL at 75 kg)');
+    if(v.rr<10||v.rr>14) probs.push('RR '+v.rr+' outside 10–14/min');
+    if(v.flow<60||v.flow>100) probs.push('Flow '+v.flow+' outside 60–100 L/min');
+    fb.insertAdjacentHTML('beforeend','<div class="fb part"><b>△ Not yet safe:</b>'+
+      probs.map(esc).join('<br>')+'<br><span style="opacity:.75">['+esc(sc.evidence)+']</span></div>');
+    logLine('pa','Scene '+(App.sceneIdx+1)+' △ vent settings rejected ('+probs.length+' issue(s))');
+  }
+}
+/* Discussion card — non-scored Socratic prompt, shown only AFTER a correct commit */
+function discussHTML(sc){
+  if(!sc.discuss) return '';
+  const d=sc.discuss;
+  return '<div class="discuss" role="group" aria-label="Discussion prompt for the room">'+
+    '<h4>⌁ DISCUSS WITH THE ROOM</h4>'+
+    '<div class="q">'+esc(d.question)+'</div>'+
+    '<details class="ev"><summary aria-label="Reveal facilitator talking points">Reveal talking points</summary>'+
+    d.points.map(p=>'<p>• '+esc(p)+'</p>').join('')+
+    (d.evidence?'<p style="opacity:.7">['+esc(d.evidence)+']</p>':'')+
+    '</details>'+
+    '<textarea id="dnote" aria-label="Discussion notes" placeholder="Capture what the room said (optional)…"></textarea>'+
+    '<button type="button" id="dnotebtn" class="notebtn" aria-label="Add discussion note to debrief log">ADD NOTE TO DEBRIEF LOG</button></div>';
+}
+function wireDiscuss(){
+  const b=$('#dnotebtn'); if(!b) return;
+  b.addEventListener('click',()=>{
+    const t=$('#dnote').value.trim(); if(!t) return;
+    logLine('in','🗣 Scene '+(App.sceneIdx+1)+': '+t);
+    $('#dnote').value='';
+  });
+}
+/* Facilitator guide — printable, spoilers included (instructor only) */
+function showGuide(){
+  $('#guidecard').innerHTML =
+    '<h1>FACILITATOR GUIDE</h1>'+
+    '<p class="noprint" style="color:#ffb300">⚠ Contains answers and spoilers — instructor use only. '+
+    'Print or save as PDF for the session.</p>'+
+    SCENARIOS.map((s,i)=>{
+      return '<div class="gscen"><h2>SCENARIO '+(i+1)+' — '+esc(s.title)+'</h2>'+
+      '<p><i>'+esc(s.phenotypeContext)+'</i></p>'+
+      '<p><b>Objectives:</b> '+s.learningObjectives.map(esc).join(' · ')+'</p>'+
+      s.scenes.map((sc,j)=>{
+        const best = sc.type==='vent'
+          ? 'Optimize to dossier bands: Vt 450–600 mL, RR 10–14, flow 60–100, set PEEP 0–5, VE ≤10, I:E ≥1:3, Pplat ≤30, ΔP ≤15'
+          : (sc.options||[]).filter(o=>o.correct===true).map(o=>o.label).join('  +  ');
+        return '<div class="gscene"><b>Scene '+(j+1)+':</b> '+esc(sc.prompt.split('\n')[0])+
+          '<br><span style="color:#00e676">✓ Best action: '+esc(best)+'</span>'+
+          (sc.discuss ? '<br><span style="color:#ffb300">⌁ Discuss: '+esc(sc.discuss.question)+'</span>'+
+            '<ul>'+sc.discuss.points.map(p=>'<li>'+esc(p)+'</li>').join('')+'</ul>' : '')+
+          '</div>';
+      }).join('')+
+      '<p><b>Debrief — key principles:</b></p><ul>'+
+      s.debriefSummary.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul></div>';
+    }).join('')+
+    '<button class="bigbtn noprint" onclick="window.print()">PRINT / SAVE AS PDF</button>'+
+    '<button class="ghostbtn noprint" onclick="hideGuide()">CLOSE</button>';
+  document.body.classList.add('printguide');
+  $('#guideoverlay').style.display='flex';
+}
+function hideGuide(){
+  document.body.classList.remove('printguide');
+  $('#guideoverlay').style.display='none';
+}
+function applyEffect(eff){
+  if(!eff) return;
+  const e=cloneJ(eff); delete e.deterioration;
+  deepMerge(App.state,e);
+}
+function showNext(){
+  App.advanceReady=true;
+  $('#commitbtn').style.display='none';
+  $('#nextbtn').style.display='inline-block';
+  $('#nextbtn').focus();
+}
+function nextScene(){
+  if(!App.advanceReady) return;
+  if(App.sceneIdx < App.scen.scenes.length-1){ App.sceneIdx++; renderScene(); }
+  else endScenario();
+}
+/* Facilitator skip: advance the case along the correct path without scoring credit */
+function skipScene(){
+  const sc=curScene();
+  if(App.first[sc.id]===undefined) App.first[sc.id]=false;   // skipped ≠ first-pass clean
+  if(sc.type==='vent') applyEffect(sc.effectOnSuccess||{});
+  else (sc.options||[]).forEach(o=>{ if(o.correct===true && o.effect) applyEffect(o.effect); });
+  logLine('in','Scene '+(App.sceneIdx+1)+' skipped — case advanced along the correct path');
+  App.advanceReady=true; nextScene();
+}
+function flash(msg){
+  $('#feedback').innerHTML='<div class="fb info">'+esc(msg)+'</div>';
+}
+function updateRail(){
+  const n=App.scen.scenes.length;
+  $('#raildots').innerHTML=Array.from({length:n},(_,i)=>
+    '<div class="dot '+(i<App.sceneIdx?'done':i===App.sceneIdx?'cur':'')+'" role="listitem" '+
+    'aria-label="Scene '+(i+1)+(i<App.sceneIdx?' complete':i===App.sceneIdx?' current':'')+'">'+
+    (i<App.sceneIdx?'✓':(i+1))+'</div>').join('');
+}
+function logLine(cls,txt){
+  const d=$('#debrieflog');
+  d.insertAdjacentHTML('afterbegin','<div class="'+cls+'">'+esc(txt)+'</div>');
+}
+function endScenario(){
+  const s=App.scen;
+  const ids=s.scenes.map(x=>x.id);
+  const fp=ids.filter(id=>App.first[id]===true).length;
+  App.completed[s.id]={fp:fp,total:ids.length};
+  const missedHtml = App.missed.length ?
+    '<h2>REVISIT THESE (chosen along the way)</h2><ul>'+
+    App.missed.map(m=>'<li style="color:#ffb300">✗ '+esc(m)+'</li>').join('')+'</ul>' :
+    '<p style="color:#00e676">Clean run — no unsafe choices committed.</p>';
+  const realHtml = s.realCases ?
+    '<h2>GO DEEPER — REAL CASES &amp; SOURCES (online)</h2><p>'+
+    s.realCases.map(c=>'<a href="'+c.url+'" target="_blank" rel="noopener" style="color:#4f8cff">'+
+    esc(c.label)+'</a>').join(' · ')+'</p>' : '';
+  $('#endcard').innerHTML =
+    '<h1>REINFORCE KEY PRINCIPLES</h1>'+
+    '<p>'+esc(s.title)+' — complete. First-pass accuracy: <b style="color:'+
+    (fp===ids.length?'#00e676':fp>=ids.length/2?'#ffb300':'#ff5252')+'">'+fp+' / '+ids.length+
+    ' scenes</b>.</p>'+
+    '<ul>'+s.debriefSummary.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>'+
+    missedHtml + realHtml +
+    (App.scenIdx<SCENARIOS.length-1?
+      '<button class="bigbtn" onclick="startScenario('+(App.scenIdx+1)+')">NEXT SCENARIO → '+
+      esc(SCENARIOS[App.scenIdx+1].title)+'</button>':'')+
+    '<button class="ghostbtn" onclick="goHome()">SCENARIO MENU</button>'+
+    '<p class="disclaim">Educational simulation. Simulated waveforms/imaging. Not for clinical use.</p>';
+  $('#endoverlay').style.display='flex';
+  logLine('in','━━ COMPLETED: '+s.title+' ━━');
+}
+function goHome(){
+  $('#endoverlay').style.display='none';
+  buildHome(); $('#homeoverlay').style.display='flex';
+}
+function buildHome(){
+  $('#scenlist').innerHTML=SCENARIOS.map((s,i)=>{
+    const c=App.completed[s.id];
+    const done=c?' <span class="done">✓ COMPLETED · first-pass '+c.fp+'/'+c.total+'</span>':'';
+    return '<button class="scenbtn" onclick="startScenario('+i+')" aria-label="Start scenario '+(i+1)+': '+esc(s.title)+'">'+
+    '<span class="st">SCENARIO '+(i+1)+done+'</span>'+
+    esc(s.title)+'<br><span style="color:#8fa3b8;font-size:11px;">'+esc(s.phenotypeContext)+'</span></button>';}).join('');
+}
+/* ================================================================
+   SCENARIOS  (ScenarioSchema — append Scenario 6+ at the end)
+   All clinical values, doses & thresholds from the CLINICAL DOSSIER.
+   ================================================================ */
+const SCENARIOS = [
+
+/* ───────────────────────── S1 ───────────────────────── */
+{
+id:'s1',
+title:'S1 · Acute severe asthma in the ED',
+phenotypeContext:'34-year-old with known asthma, escalating reliever use, arrives in severe respiratory distress. Work the case from triage to disposition.',
+learningObjectives:[
+ 'Classify T2 phenotype with eosinophils/FeNO','Score GINA symptom control & ACT',
+ 'Deliver the evidence-based first-hour ED bundle','Escalate: continuous nebs + IV magnesium',
+ 'Judge NIV honestly (Evidence D)','Discharge on GINA Step 4 MART'],
+initialState:{
+ vitals:{hr:118,spo2:91,sbp:142,dbp:88,rr:28,etco2:30},
+ vent:null,
+ abg:null,
+ imaging:{cxr:null,us:null},
+ severity:0.75
+},
+scenes:[
+{ id:'s1-1', dataView:'flowloop', type:'single',
+  discuss:{question:'Your patient was on prednisone last week and the eosinophil count came back 80. A colleague concludes T2-low disease. Argue both sides — then decide when you would recheck biomarkers.',
+   points:['Steroids (oral and inhaled) suppress blood eosinophils and FeNO — a single low value on treatment does not exclude T2 disease.','Repeat biomarkers when steroid exposure is lowest; repeated measures raise diagnostic yield, and many payers accept the highest historical value.','T2-low requires FeNO <=20 AND eos <=150 — and is itself an unstable phenotype that can declare T2 later.','Practical rule: never phenotype a patient off a single number drawn mid-exacerbation or on OCS.'],
+   evidence:'GINA 2026; McDowell AJRCCM 2022; Woo AAAI 2023'},
+  prompt:'Triage: speaking in phrases, diffuse wheeze, accessory muscle use. Spirometry from clinic last month: FEV1 38% predicted during flares (illustrative). Labs today: blood eosinophils 420 cells/uL, FeNO 58 ppb (never on high-dose ICS).\n\nClassify the inflammatory phenotype.',
+  options:[
+   {id:'a',correct:true,label:'T2-high: eosinophils >=300 cells/uL plus FeNO >50 ppb (ATS high band)',
+    evidence:'GINA 2026; Pavlidis ERJ 2019; Khatri ATS 2021',
+    feedback:'Correct. T2-high biomarkers: blood eos >=300 cells/uL (>=150 on high-dose ICS suggests refractory T2); FeNO >50 ppb in adults; sputum eos >=2%. ATS adult FeNO bands: low <25, intermediate 25–50, high >50 ppb. This phenotype predicts steroid and biologic responsiveness.'},
+   {id:'b',correct:false,label:'T2-low asthma — eosinophils are only mildly elevated',
+    evidence:'McDowell AJRCCM 2022',
+    feedback:'No. T2-low requires FeNO <=20 ppb AND eosinophils <=150 cells/uL — and even then it is an unstable phenotype. This patient is clearly above both T2-high cutoffs.'},
+   {id:'c',correct:'partial',label:'Phenotype cannot be judged from a single blood eosinophil value',
+    evidence:'GINA 2026; Woo AAAI 2023',
+    feedback:'Half-right teaching point: a single LOW eosinophil count does NOT exclude T2 (values fluctuate, especially on steroids). But an elevated eos + high FeNO, as here, does support T2-high now.'}]},
+
+{ id:'s1-2', dataView:'monitor', type:'single',
+  prompt:'History (past 4 weeks): daytime symptoms daily, night waking twice weekly, reliever use daily, stopped playing soccer. ACT score 14.\n\nGrade her baseline symptom control (GINA).',
+  options:[
+   {id:'a',correct:true,label:'UNCONTROLLED — all 4 GINA criteria positive; ACT 14 = very poor control',
+    evidence:'GINA 2026; Cloutier JACI 2020',
+    feedback:'Correct. GINA (past 4 wks): daytime sx >2x/wk, any night waking, reliever >2x/wk, any activity limitation. Well=0, Partly=1–2, Uncontrolled=3–4 — she has 4/4. ACT: >=20 well-controlled, 16–19 not well, 5–15 very poor (MID 3). ACQ-5: <0.75 well, >=1.5 uncontrolled (MID 0.5).'},
+   {id:'b',correct:false,label:'Partly controlled — she is still active and working',
+    evidence:'GINA 2026',
+    feedback:'No — partly controlled is 1–2 positive criteria. She has all four. Under-grading control drives under-treatment and repeat exacerbations.'},
+   {id:'c',correct:false,label:'Cannot grade control during an acute exacerbation',
+    evidence:'GINA 2026',
+    feedback:'Control is graded on the past 4 weeks of interval symptoms, not the current attack — that history is exactly what you use to fix the discharge regimen.'}]},
+
+{ id:'s1-3', dataView:'flowloop', type:'multi',
+  discuss:{question:'The ipratropium NNT of 5 comes from an FEV1 <50% subgroup, and the benefit disappears after admission. How should subgroup-derived, time-limited evidence change what you actually do at the bedside?',
+   points:['Benefit concentrates in the sickest patients and in the ED window — front-load ipratropium early rather than continuing it on the ward.','Subgroup findings are hypothesis-strengthening, not ironclad — but a cheap, safe drug with NNT 5 in the right subgroup shifts the threshold to act.','Contrast with a subgroup signal that did NOT survive testing: nebulized magnesium (3Mg trial).'],
+   evidence:'Rodrigo AJRCCM 2000; Kirkland Cochrane 2017; 3Mg Lancet 2013'},
+  requiredToAdvance:['a','b','c'],
+  onAdvanceNote:'20 minutes later: wheeze slightly better, SpO2 93%, HR 124, still tight. Partial response → escalate.',
+  prompt:'Build the FIRST-HOUR ED bundle. Select every indicated intervention (and none that are wrong).',
+  options:[
+   {id:'a',correct:true,label:'Albuterol 2.5–5 mg neb q20min x3 (or pMDI+spacer 4–8 puffs q20min)',
+    evidence:'GINA 2026; Lazarus NEJM 2010',
+    feedback:'Yes. Intermittent SABA 2.5–5 mg neb q20min x3, then 2.5–10 mg q1–4h. pMDI+spacer 4–8 puffs q20min is EQUIVALENT (Evidence A — life-threatening cases excluded from those trials).',
+    effect:{severity:0.6,vitals:{spo2:93,hr:124}}},
+   {id:'b',correct:true,label:'Ipratropium 0.5 mg neb q20min x3, then PRN',
+    evidence:'Rodrigo AJRCCM 2000; Kirkland Cochrane 2017; Rodrigo Thorax 2005',
+    feedback:'Yes. Adding ipratropium to SABA cuts admission (RR 0.68 adults); landmark RCT: RR 0.51, NNT 5 when FEV1 <50% — her flare range. No benefit once admitted, so front-load it in the ED.'},
+   {id:'c',correct:true,label:'Prednisone 40–50 mg PO within 1 hour',
+    evidence:'GINA 2026; Lazarus NEJM 2010',
+    feedback:'Yes. Systemic steroid within 1 h; oral = IV (Evidence A); 40–50 mg x5–7 d. Reserve IV (methylprednisolone 1 mg/kg q6h or hydrocortisone 200 mg divided) for vomiting/can\'t swallow/NIV/intubated. Onset >=4 h — it will not rescue the next 20 minutes.'},
+   {id:'d',correct:false,label:'IV methylprednisolone instead — IV steroids act faster and stronger',
+    evidence:'GINA 2026; Lazarus NEJM 2010',
+    feedback:'No. Oral equals IV (Evidence A) when the patient can swallow. IV is for vomiting, inability to swallow, NIV, or intubation — not for imagined extra potency.'},
+   {id:'e',correct:false,label:'Hold reassessment for 4 h to let the steroid take effect',
+    evidence:'GINA 2026',
+    feedback:'No. Steroid onset is >=4 h, but severe asthma is reassessed continuously after each neb cycle; bronchodilator response drives the next decision, not the steroid clock.'}]},
+
+{ id:'s1-4', dataView:'flowloop', type:'multi',
+  requiredToAdvance:['a','b'],
+  onAdvanceNote:'After continuous nebs + magnesium: air entry improves, RR 20, SpO2 95%, HR 128 (beta-agonist effect). The scooped loop is opening up.',
+  prompt:'Partial response after the first hour (illustrative FEV1 now ~28% predicted). HR 124, K+ 3.1, lactate 3.4 on continuous nebs.\n\nEscalate — select every correct action.',
+  options:[
+   {id:'a',correct:true,label:'Switch to CONTINUOUS neb albuterol 10–15 mg/hr',
+    evidence:'Cochrane Camargo 2003; Dolovich Lancet 2011',
+    feedback:'Yes. Continuous nebulization 10–15 mg/hr: greater PEF/FEV1 gain and fewer admissions than intermittent, especially in severe attacks. (Continuous dosing is a practice-reference — not standardized by GINA.)',
+    effect:{severity:0.45,vitals:{rr:20,spo2:95,hr:128}}},
+   {id:'b',correct:true,label:'IV magnesium sulfate 2 g over 20 min (single dose)',
+    evidence:'Kew Cochrane 2014; Silverman Chest 2002; GINA 2026',
+    feedback:'Yes. Cochrane (14 RCTs): admissions OR 0.75 (~7 fewer per 100). Greatest benefit at FEV1 <25% predicted (+9.7% predicted FEV1). Reserve for failure of initial therapy / FEV1 <25–30% (Evidence A) — she qualifies.'},
+   {id:'c',correct:false,label:'Nebulized magnesium added to the albuterol circuit',
+    evidence:'3Mg Lancet 2013; GINA 2026',
+    feedback:'No. Nebulized magnesium is NOT effective (3Mg trial). The evidence-based route is IV, 2 g over 20 min.'},
+   {id:'d',correct:false,label:'Tachycardia + rising lactate + low K = deterioration — prepare to intubate',
+    evidence:'GINA 2026',
+    feedback:'Trap. Tachycardia, hypokalemia, and lactic acidosis are SABA toxicity and mimic worsening asthma. Judge the patient: air entry, work of breathing, mentation, gas trajectory — all improving here.'}]},
+
+{ id:'s1-5', dataView:'monitor', type:'single',
+  discuss:{question:'A colleague argues the observational data (intubation RR ~0.46–0.55) justify routine NIV in severe asthma. What is wrong — and what is right — about that argument?',
+   points:['Confounding by indication: patients selected for NIV are systematically different from those intubated first.','The RCTs are small and used modest pressures (IPAP 8–12 / EPAP 4–5); GINA therefore gives no formal recommendation (Evidence D).','What IS defensible: a closely monitored trial in a cooperative patient with an escape plan — never sedation for tolerance, never in agitation or obtundation.'],
+   evidence:'GINA 2026; Soroksky Chest 2003; Althoff AJRCCM 2020'},
+  prompt:'A colleague suggests: "Just put her on BiPAP and give a little midazolam so she tolerates the mask."\n\nYour call on NIV right now (patient improving, anxious but cooperative)?',
+  options:[
+   {id:'a',correct:true,label:'NIV not required — she is improving. If trialed: IPAP 8/EPAP 4 (up to ~12/5), close monitoring, and NEVER sedate for mask tolerance',
+    evidence:'GINA 2026; Soroksky Chest 2003; Gupta Respir Care 2010',
+    feedback:'Correct. NIV in asthma has weak/low-quality evidence; GINA makes NO formal recommendation (Evidence D). Trial settings were modest: IPAP 8/EPAP 4 (Soroksky) to ~12/5 (Gupta). Large observational cohorts associate NIV with lower intubation (RR ~0.46–0.55) and lower mortality — but do not use it in agitated patients and never sedate to tolerate it.'},
+   {id:'b',correct:false,label:'Agree — NIV plus light sedation is standard rescue in severe asthma',
+    evidence:'GINA 2026; Althoff AJRCCM 2020; Abbott CCM 2026',
+    feedback:'No. Sedating a severe asthmatic to tolerate NIV removes her respiratory drive safety margin. Rule: no NIV in agitated patients; no sedation for tolerance; monitor closely.',
+    effect:{deterioration:{vitals:{spo2:88,rr:12}}}},
+   {id:'c',correct:false,label:'NIV is strongly recommended (Evidence A) in acute severe asthma',
+    evidence:'GINA 2026',
+    feedback:'No — that is COPD extrapolation. In asthma the evidence is weak; GINA gives no formal recommendation (Evidence D).'}]},
+
+{ id:'s1-6', dataView:'flowloop', type:'multi',
+  discuss:{question:'This patient arrived on SABA-only rescue despite a prior ED visit. Walk the system failures between that visit and today — where does the chain usually break in your shop?',
+   points:['Discharge without a controller step-up is the most fixable failure: MART cuts severe exacerbations ~32% vs same-dose ICS-LABA.','SABA-only rescue reinforces reliever culture and masks worsening inflammation.','The 2–7 day follow-up IS the intervention: technique, adherence, action plan, step-down planning at 2–3 months.','Ask the room: who owns that follow-up appointment before the patient leaves your ED?'],
+   evidence:'GINA 2026'},
+  requiredToAdvance:['a','b','c'],
+  prompt:'6 hours later: comfortable, wheeze-free, illustrative FEV1 68% predicted. Build the DISCHARGE package.',
+  options:[
+   {id:'a',correct:true,label:'Start GINA Step 4 MART: budesonide-formoterol 160/4.5 — 2 inh BID + 1 inh PRN (max 12 inh/day)',
+    evidence:'GINA 2026',
+    feedback:'Yes. Preferred after an ED visit/hospitalization: start at Step 4 MART, budesonide-formoterol 160/4.5 (metered 200/6): 2 inh BID + 1 PRN; max 12 inh/day; seek care if >12 inh/24h. MART cuts severe exacerbations ~32% vs same-dose ICS-LABA. Step down only after 2–3 months stable.',
+    effect:{severity:0.2,vitals:{hr:88,rr:14,spo2:97}}},
+   {id:'b',correct:true,label:'Prednisolone 40–50 mg daily x5–7 days, no taper',
+    evidence:'GINA 2026',
+    feedback:'Yes. Complete 5–7 days; no taper needed when the course is <2 weeks and the patient is on ICS.'},
+   {id:'c',correct:true,label:'Follow-up within 2–7 days',
+    evidence:'GINA 2026',
+    feedback:'Yes — early review within 2–7 days: technique, adherence, control scores, and step-down planning at 2–3 months.'},
+   {id:'d',correct:false,label:'Salmeterol-fluticasone as the MART reliever',
+    evidence:'GINA 2026',
+    feedback:'Never. Only ICS-FORMOTEROL can be used for MART — formoterol has rapid onset; salmeterol does not and must not be used as a reliever.'},
+   {id:'e',correct:false,label:'Albuterol-only inhaler for rescue, continue prior regimen unchanged',
+    evidence:'GINA 2026',
+    feedback:'No. Discharging a patient with 4/4 uncontrolled criteria on SABA-only rescue reproduces the same exacerbation. Step UP: this is the moment to start MART.'}]}
+],
+debriefSummary:[
+ 'T2-high = eos >=300 cells/uL or FeNO >50 ppb (ATS bands: <25 low, 25–50 intermediate, >50 high); a single low eos does not exclude T2. [GINA 2026; Khatri ATS 2021]',
+ 'First hour: albuterol 2.5–5 mg neb q20min x3 + ipratropium 0.5 mg q20min x3 (RR 0.51, NNT 5 at FEV1 <50%) + prednisone 40–50 mg PO (oral = IV, Evidence A). [GINA 2026; Rodrigo AJRCCM 2000; Lazarus NEJM 2010]',
+ 'Failure of initial Rx / FEV1 <25–30% → continuous nebs 10–15 mg/hr + IV MgSO4 2 g over 20 min; nebulized Mg is ineffective. [Cochrane Camargo 2003; Kew Cochrane 2014; 3Mg Lancet 2013]',
+ 'SABA toxicity (tachycardia, hypokalemia, lactic acidosis) mimics worsening asthma — treat the patient, not the lactate. [GINA 2026]',
+ 'NIV: Evidence D, no GINA recommendation; never in agitation, never sedate for tolerance. [GINA 2026; Soroksky Chest 2003]',
+ 'Discharge = GINA Step 4 MART budesonide-formoterol 160/4.5 (2 BID + 1 PRN, max 12/day) + prednisolone 40–50 mg x5–7 d + review in 2–7 days. [GINA 2026]']
+},
+
+/* ───────────────────────── S2 ───────────────────────── */
+{
+id:'s2',
+title:'S2 · Beyond first-line therapy',
+phenotypeContext:'26-year-old, prior ICU admissions, 2 days of worsening despite home therapy — and the first hour in the ED has not gone the way anyone hoped. How far can you go, and when do you change course?',
+learningObjectives:[
+ 'Read the "normalizing PaCO2" danger sign','Deploy the rescue ladder with honest evidence grades',
+ 'Choose intubation on clinical triggers, not one number','Perform RSI: ketamine + BiPAP preoxygenation',
+ 'Avoid post-intubation pitfalls (sustained paralysis)'],
+initialState:{
+ vitals:{hr:132,spo2:90,sbp:148,dbp:92,rr:32,etco2:29},
+ vent:null,
+ abg:{ph:7.36,paco2:41,pao2:62,hco3:23},
+ abgNote:'On albuterol continuous 15 mg/hr + ipratropium + methylprednisolone IV + MgSO4 2 g given.',
+ imaging:{cxr:null,us:null},
+ severity:0.9
+},
+scenes:[
+{ id:'s2-1', dataView:'abg', type:'single',
+  discuss:{question:'Teach your intern: why do we read this \'normal\' gas as an emergency? Build the general rule for interpreting blood gases against expected compensation.',
+   points:['A distressed asthmatic should be hypocapnic; PaCO2 41 means minute ventilation is failing toward fatigue.','Always ask what the gas SHOULD be for this degree of distress; trajectory beats any single value.','Pair every gas with a work-of-breathing exam — the gas lags the muscles.'],
+   evidence:'GINA 2026; Papiris Crit Care 2002'},
+  prompt:'One hour of maximal first-line therapy. He is word-dyspneic, diaphoretic, RR 32.\nSimulated ABG: pH 7.36 / PaCO2 41 / PaO2 62 (on high-flow O2).\n\nInterpret this gas.',
+  options:[
+   {id:'a',correct:true,label:'Ominous: a NORMAL PaCO2 in a distressed asthmatic = fatigue; the rising-CO2 trajectory signals impending failure',
+    evidence:'GINA 2026; Papiris Crit Care 2002',
+    feedback:'Correct. Severe asthma should show a LOW PaCO2 (hyperventilation). Normalizing or rising PaCO2 means the respiratory muscles are failing. Trajectory matters more than the absolute value. PaO2 <60 with PaCO2 >=45 defines respiratory failure — he is one step away.'},
+   {id:'b',correct:false,label:'Reassuring — pH and PaCO2 are normal, gas exchange is adequate',
+    evidence:'GINA 2026',
+    feedback:'Dangerous read. "Normal" here is pseudo-normalization: he can no longer generate the hyperventilation his obstruction demands. Watch him deteriorate.',
+    effect:{deterioration:{vitals:{spo2:87,rr:34,hr:138}}}},
+   {id:'c',correct:false,label:'PaCO2 41 alone mandates immediate intubation',
+    evidence:'GINA 2026; Papiris Crit Care 2002',
+    feedback:'No single number mandates intubation — isolated moderate hypercapnia is NOT alone an indication. It buys you minutes to escalate rescue therapy and prepare, while watching the trajectory and the patient.'}]},
+
+{ id:'s2-2', dataView:'monitor', type:'multi',
+  requiredToAdvance:['a'],
+  onAdvanceNote:'Terbutaline and epinephrine remain available; anesthesia is aware an inhalational rescue exists for ventilated patients. He is still tiring.',
+  prompt:'Climb the rescue ladder. IV magnesium was already given. Select what you would ADD now (evidence grades vary — the Evidence popovers keep you honest).',
+  options:[
+   {id:'a',correct:true,label:'Heliox 70:30 (or 80:20) driven nebs — trial in the non-responder',
+    evidence:'Rodrigo AAAI 2014; Kass Chest 1999; GINA 2026',
+    feedback:'Reasonable. Heliox reduces airway resistance/work of breathing; meta-analysis: PEF +17.2%, admissions OR 0.49; Cochrane overall neutral but benefit in the MOST severe (PEF <50%). GINA: not routine (Evidence B), consider when not responding. Requires low FiO2 — feasible at SpO2 90%.'},
+   {id:'b',correct:'partial',label:'Terbutaline 0.25 mg SC (repeat in 15–30 min, max 0.5 mg/4 h)',
+    evidence:'FDA terbutaline 2022; Travers Cochrane 2012',
+    feedback:'Available and dosed correctly (FDA label = SC; IV is off-label: 10 mcg/kg over 30 min then 0.1 mcg/kg/min). Cochrane shows no clear benefit of IV beta2-agonist ADDED to inhaled — reserve parenteral routes for patients who cannot entrain nebs.'},
+   {id:'c',correct:'partial',label:'Epinephrine 0.3–0.5 mg (1:1000) IM, q20min x3',
+    evidence:'Dabbs AFP 2024; Baggott Thorax 2022',
+    feedback:'Correctly dosed. First-line when asthma coexists with anaphylaxis/angioedema; otherwise epi vs selective beta2 = similar efficacy, so it is a legitimate parenteral option rather than a magic bullet.'},
+   {id:'d',correct:'partial',label:'Ketamine infusion as a BRONCHODILATOR to avert intubation',
+    evidence:'La Via EJCP 2022; Howton AEM 1996',
+    feedback:'Know the honest grade: RCTs are NEGATIVE; only case-level support in refractory disease (infusion 1–2.5 mg/kg/h). Ketamine is solid as an RSI induction agent — weak as a therapeutic bronchodilator.'},
+   {id:'e',correct:false,label:'Repeat IV magnesium 2 g hourly until wheeze resolves',
+    evidence:'Kew Cochrane 2014; GINA 2026',
+    feedback:'No. The evidence base is a SINGLE 2 g infusion over 20 min. Serial magnesium boluses are not dossier-supported therapy.'}]},
+
+{ id:'s2-3', dataView:'monitor', type:'single',
+  prompt:'RT asks about a BiPAP trial while rescue therapy runs. He is exhausted but cooperative, protecting his airway.\n\nNIV orders?',
+  options:[
+   {id:'a',correct:true,label:'Short, closely-monitored trial: IPAP ~12 / EPAP 5, intubation kit open at the bedside, abort for agitation or any deterioration',
+    evidence:'Gupta Respir Care 2010; Althoff AJRCCM 2020; GINA 2026',
+    feedback:'Defensible. Trial settings ranged IPAP 8/EPAP 4 (Soroksky) to ~12/5 (Gupta). Observational cohorts: lower intubation (RR ~0.46–0.55) and mortality — but this is Evidence D territory: NIV must never delay a needed intubation.',
+    effect:{vitals:{spo2:92,rr:28}}},
+   {id:'b',correct:false,label:'Add dexmedetomidine so he settles onto the mask',
+    evidence:'GINA 2026',
+    feedback:'No. Do not sedate to tolerate NIV — respiratory drive is the only thing keeping him alive.',
+    effect:{deterioration:{vitals:{spo2:86,rr:14,hr:142}}}},
+   {id:'c',correct:false,label:'NIV contraindicated in asthma — proceed straight to intubation now',
+    evidence:'GINA 2026; Soroksky Chest 2003',
+    feedback:'Overcorrection. NIV is not contraindicated in a cooperative, protected airway — it is simply weak evidence requiring vigilance. Intubation has its own ~45% complication rate; a monitored trial while rescue drugs work is reasonable.'}]},
+
+{ id:'s2-4', dataView:'abg', type:'single',
+  discuss:{question:'Your attending pushes back: \'He is 26. The NIV cohorts show lower mortality. Why not one more hour?\' Defend your timing out loud.',
+   points:['Strong triggers end the debate: altered mental status, silent chest, exhaustion — NIV in an obtunded patient is an aspiration event in progress.','Semi-elective NOW beats a crash tube in 30 minutes: ~45% complication rate demands controlled conditions and volume-loading.','Name the roles before you push drugs: who intubates, who watches the pressures, who owns the vent settings.'],
+   evidence:'GINA 2026; Zimmerman CCM 1993; Sydow Minerva 2003'},
+  prompt:'30 min later: he is drowsy, mumbling, chest nearly SILENT. SpO2 88% on NIV. Repeat gas: pH 7.24 / PaCO2 68 / PaO2 58.\n\nDecision point.',
+  options:[
+   {id:'a',correct:true,label:'INTUBATE NOW — but semi-electively: controlled conditions, volume-load first, most experienced operator',
+    evidence:'GINA 2026; Zimmerman CCM 1993; Sydow Minerva 2003',
+    feedback:'Correct. Strong triggers present: altered mental status, silent chest, respiratory muscle exhaustion (the most common trigger), hypoxemia despite O2 + NIV, and a rising PaCO2 trajectory. Once decided, do it SEMI-ELECTIVELY: volume-load first (peri-intubation hypotension from hyperinflation), controlled RSI — intubated asthmatics have ~45% complication rates, so control every variable you can.',
+    effect:{abg:{ph:7.24,paco2:68,pao2:58,hco3:24}}},
+   {id:'b',correct:false,label:'Continue NIV and recheck the gas in an hour — avoid intubation at all costs',
+    evidence:'GINA 2026; Papiris Crit Care 2002',
+    feedback:'"Avoid if possible" ended when his mental status changed. Altered mental status/obtundation, silent chest, and exhaustion are STRONG intubation triggers; NIV in an obtunded patient is an aspiration event in progress.',
+    effect:{deterioration:{vitals:{spo2:82,hr:146,sbp:118,dbp:70}}}},
+   {id:'c',correct:false,label:'Crash intubation this second — no time for fluids or setup',
+    evidence:'Zimmerman CCM 1993; Sydow Minerva 2003',
+    feedback:'He has minutes, not seconds — spend them buying safety: volume-load, position, preoxygenate, drugs drawn, rescue airway ready. Peri-intubation hypotension from hyperinflation plus barotrauma are the killers; "semi-elective under controlled conditions" is the standard.'}]},
+
+{ id:'s2-5', dataView:'monitor', type:'multi',
+  discuss:{question:'Ketamine: beloved induction agent, failed bronchodilator. Why do the RCTs and bedside impressions diverge so often?',
+   points:['As induction: bronchodilatory + hemodynamically stable — the NEAR registry favorite (51.8%). That claim is solid.','As therapy: RCTs negative; bedside \'responses\' ride on co-interventions and regression to the mean.','General lesson: separate pharmacologic plausibility from proof that a drug changes outcomes.'],
+   evidence:'La Via EJCP 2022; Howton AEM 1996; Godwin Respir Care 2020'},
+  requiredToAdvance:['a','b','c'],
+  prompt:'Run the RSI. Select every element of the evidence-based approach.',
+  options:[
+   {id:'a',correct:true,label:'Ketamine 1–2 mg/kg IV for induction',
+    evidence:'Godwin Respir Care 2020; SCCM RSI CCM 2023',
+    feedback:'Yes. Ketamine is the most-used induction agent in asthma (NEAR registry 51.8%): bronchodilatory and hemodynamically stable. Dose 1–2 mg/kg IV.',
+    effect:{vitals:{hr:126,spo2:94}}},
+   {id:'b',correct:true,label:'Preoxygenate WITH the BiPAP he is already on',
+    evidence:'Godwin Respir Care 2020',
+    feedback:'Yes — BiPAP preoxygenation was used in 62.9% of asthma RSIs in NEAR; first-pass success ~90.8%. Keep the pressure on until the moment of laryngoscopy.'},
+   {id:'c',correct:true,label:'Post-intubation sedation: ketamine infusion 0.5–2 mg/kg/h (or propofol)',
+    evidence:'Garner Chest 2022; Corbridge AJRCCM 1995',
+    feedback:'Yes. Deep sedation enables the low-rate strategy coming next; ketamine 0.5–2 mg/kg/h or propofol are the workhorses.'},
+   {id:'d',correct:false,label:'Maintain continuous paralysis for the next 48–72 h for ventilator synchrony',
+    evidence:'Corbridge AJRCCM 1995; Godwin Respir Care 2020',
+    feedback:'No. Avoid SUSTAINED paralysis: neuromuscular blockade + corticosteroids = myopathy risk. Paralyze for the tube and briefly if needed; run deep sedation instead.'}]}
+],
+debriefSummary:[
+ 'A normalizing/rising PaCO2 in a distressed asthmatic is a danger sign; PaO2 <60 + PaCO2 >=45 = respiratory failure. Trajectory > absolute value. [GINA 2026; Papiris Crit Care 2002]',
+ 'Intubation triggers: altered mental status, silent chest, exhaustion (most common), hemodynamic instability, arrest, refractory hypoxemia. No single PaCO2 mandates it. [GINA 2026]',
+ 'Once decided: SEMI-ELECTIVE intubation — volume-load first; expect peri-intubation hypotension from hyperinflation (~45% complication rate). [Zimmerman CCM 1993; Sydow Minerva 2003]',
+ 'RSI: ketamine 1–2 mg/kg IV (NEAR 51.8%), BiPAP preoxygenation (62.9%), first-pass ~90.8%; then ketamine 0.5–2 mg/kg/h or propofol; avoid sustained paralysis (steroid myopathy). [Godwin Respir Care 2020; Garner Chest 2022]',
+ 'Rescue ladder honesty: heliox helps the sickest (Evidence B, not routine); terbutaline SC 0.25 mg / epi 0.3–0.5 mg IM are options; ketamine-as-bronchodilator has negative RCTs; inhalational anesthetics are case-series rescue for the ventilated. [Rodrigo AAAI 2014; FDA terbutaline 2022; La Via EJCP 2022; Ho Crit Care 2024]']
+},
+/* ───────────────────────── S3 ───────────────────────── */
+{
+id:'s3',
+title:'S3 · Post-intubation crisis',
+phenotypeContext:'The airway is finally secured after a difficult intubation and prolonged bagging — and the alarms are just getting started.',
+realCases:[
+ {label:'ETT in right main bronchus — real CXR (Radiopaedia)',url:'https://radiopaedia.org/cases/endotracheal-tube-in-right-main-bronchus'},
+ {label:'Pneumothorax on lung ultrasound — real barcode/M-mode (Radiopaedia)',url:'https://radiopaedia.org/cases/pneumothorax-ultrasound'}],
+learningObjectives:[
+ 'Interpret absent lung sliding in context','Use the lung point to separate PTX from a non-ventilated lung',
+ 'Verify ETT depth: 20/22 cm rule, tip 2–6 cm above carina','Correct a mainstem intubation and re-verify'],
+initialState:{
+ vitals:{hr:128,spo2:88,sbp:112,dbp:70,rr:14,etco2:52},
+ vent:{vt:450,rr:14,flow:80,peep:5,fio2:1.0,raw:32,crs:30},
+ abg:{ph:7.22,paco2:70,pao2:58,hco3:25},
+ abgNote:'Post-intubation, FiO2 1.0.',
+ imaging:{cxr:{ett:'mainstem',leftCollapse:true,shift:'right'},
+          us:{sliding:false,mmode:'barcode',side:'LEFT hemithorax',lungpoint:false,blines:false}},
+ severity:0.9
+},
+scenes:[
+{ id:'s3-1', dataView:'us', type:'single',
+  discuss:{question:'You fought a difficult airway and now the sats are falling — why is pneumothorax the diagnosis your brain reaches for first, and what forced you off it here?',
+   points:['Availability and anchoring bias: barotrauma is the feared complication, so absent sliding \'confirms\' it — unless you demand the lung point.','A systematic post-intubation scan (tube depth, bilateral sliding, waveforms) beats pattern-matching under adrenaline.','Cost of the wrong call: needling a mainstem creates the pneumothorax you feared.'],
+   evidence:'Patel JOMI EFAST 2021; SCCM CCM 2015'},
+  prompt:'Intubation was difficult: 2 attempts, prolonged BVM. Now: PIP 58 cmH2O, SpO2 88% and drifting, absent LEFT breath sounds.\nYou scan the LEFT chest (image at left): sliding ABSENT, barcode on M-mode. You sweep the whole hemithorax — NO lung point anywhere. No B-lines.\n\nWhat does the ultrasound tell you?',
+  options:[
+   {id:'a',correct:true,label:'Absent sliding + barcode but NO lung point after a difficult intubation → suspect RIGHT MAINSTEM (whole left lung not ventilated), not pneumothorax',
+    evidence:'Patel JOMI EFAST 2021; SCCM CCM 2015',
+    feedback:'Correct — the key pitfall. Absent left sliding in an intubated patient may be right mainstem intubation: a non-ventilated lung does not slide and shows barcode, but has NO lung point (atelectasis). A lung point is pathognomonic for PTX (spec 99–100%, sens 59–75%; absent only in massive PTX). Correlate with tube depth before you needle anyone.'},
+   {id:'b',correct:false,label:'Barcode sign = pneumothorax — needle decompress the left chest now',
+    evidence:'SCCM CCM 2015; Buda NEJM 2023',
+    feedback:'Stop. Barcode only says "no sliding HERE" — mainstem intubation does the same to the whole contralateral lung. Without a lung point (and without tension physiology) decompressing this chest risks creating the very pneumothorax you fear.',
+    effect:{deterioration:{vitals:{spo2:84,hr:138}}}},
+   {id:'c',correct:'partial',label:'Absent B-lines support PTX — but one B-line would have excluded it at that interspace',
+    evidence:'Buda NEJM 2023; SCCM CCM 2015',
+    feedback:'True rule (a single B-line excludes PTX at that spot; PTX criteria = absent sliding + absent B-lines + barcode ± lung point) — but incomplete: absent B-lines cannot separate PTX from a non-ventilated lung. The discriminator you searched for and did NOT find is the lung point.'}]},
+
+{ id:'s3-2', dataView:'cxr', type:'single',
+  prompt:'Stat supine CXR (left). The ETT was secured at 26 cm at the incisors in this 168-cm woman.\n\nRead the film.',
+  options:[
+   {id:'a',correct:true,label:'ETT tip BELOW the carina in the right mainstem with left-lung volume loss — depth should be ~20 cm (women) / 22 cm (men), tip 2–6 cm above carina',
+    evidence:'Sitzwohl BMJ 2010; Ramsingh Anesthesiology 2016',
+    feedback:'Correct. ETT depth is the best single bedside test (88%) — 20 cm women / 22 cm men at the incisors; radiographic target: tip 2–6 cm above carina. 26 cm in a 168-cm woman is a mainstem until proven otherwise. Ultrasound confirmation of tracheal placement + bilateral sliding: sens 93% / spec 96%.'},
+   {id:'b',correct:false,label:'Breath sounds were equal after intubation per the code note, so the film must be rotated',
+    evidence:'Sitzwohl BMJ 2010',
+    feedback:'Auscultation is unreliable — it MISSED 55% of mainstem intubations in a randomized study. Trust depth + imaging over ears.'},
+   {id:'c',correct:false,label:'Left hemithorax opacification = large left effusion; place a left pigtail',
+    evidence:'Schwartz CCM 1994',
+    feedback:'No. Acute uniform left opacification minutes after a deep tube is resorption atelectasis of the non-ventilated lung, not a sudden effusion. Fix the tube first — the "effusion" will re-aerate.'}]},
+
+{ id:'s3-3', dataView:'us', type:'multi',
+  discuss:{question:'Auscultation missed 55% of mainstem intubations. What other bedside \'reassurances\' in your ICU deserve the same skepticism — and what verification culture replaces them?',
+   points:['Equal breath sounds, tube misting, symmetric chest rise: all fail at meaningful rates.','Replace with: the depth rule (20/22 cm), bilateral sliding on US (sens 93%/spec 96%), CXR tip 2–6 cm above carina.','Invite the room: name one verification step your unit skips when it is busy.'],
+   evidence:'Sitzwohl BMJ 2010; Ramsingh Anesthesiology 2016'},
+  requiredToAdvance:['a','b'],
+  onAdvanceNote:'ETT withdrawn to 21 cm: bilateral sliding returns (seashore both sides), PIP falls to 41 (still high — he is a severe asthmatic), SpO2 climbs to 94%.',
+  prompt:'Fix it. Select the complete correction sequence.',
+  options:[
+   {id:'a',correct:true,label:'Withdraw the ETT to ~21 cm under direct observation',
+    evidence:'Sitzwohl BMJ 2010; Schwartz CCM 1994',
+    feedback:'Yes — pull back to the depth rule (20 cm women / 22 cm men), deflating pressure on the right lung and re-aerating the left.',
+    effect:{vitals:{spo2:94,hr:118},abg:{pao2:78},severity:0.75,
+            imaging:{cxr:{ett:'normal',leftCollapse:false,shift:'none'},
+                     us:{sliding:true,mmode:'seashore',side:'BILATERAL',blines:false}}}},
+   {id:'b',correct:true,label:'Re-verify: bilateral lung sliding on US + repeat CXR (tip 2–6 cm above carina)',
+    evidence:'Ramsingh Anesthesiology 2016; Schwartz CCM 1994',
+    feedback:'Yes — closure of the loop. US re-verification (sens 93%/spec 96%) is immediate; the film documents final tip position.'},
+   {id:'c',correct:false,label:'Exchange the tube over a bougie for a fresh ETT',
+    evidence:'Schwartz CCM 1994',
+    feedback:'No. The tube is functional, just deep. Re-instrumenting a difficult airway in a hypoxemic severe asthmatic invites laryngospasm, bronchospasm, and a can\'t-intubate crisis. Withdraw, don\'t exchange.'},
+   {id:'d',correct:false,label:'Advance the tube slightly — deeper is more secure against dislodgement',
+    evidence:'Sitzwohl BMJ 2010',
+    feedback:'Backwards — deeper worsens the mainstem. Depth discipline: 20/22 cm at the incisors, tip 2–6 cm above carina.',
+    effect:{deterioration:{vitals:{spo2:85}}}}]}
+],
+debriefSummary:[
+ 'Absent lung sliding is a finding, not a diagnosis: mainstem intubation silences the whole contralateral lung. The LUNG POINT separates PTX (present; spec 99–100%) from a non-ventilated lung (absent). [Patel JOMI EFAST 2021; SCCM CCM 2015]',
+ 'One B-line excludes PTX at that interspace. [Buda NEJM 2023]',
+ 'Auscultation missed 55% of mainstems; ETT depth is the best single test (88%): 20 cm women / 22 cm men; radiographic tip 2–6 cm above carina; US sens 93%/spec 96%. [Sitzwohl BMJ 2010; Ramsingh Anesthesiology 2016]',
+ 'Fix = withdraw the ETT and re-confirm with bilateral sliding + CXR — do not exchange a working tube in a difficult airway. [Schwartz CCM 1994]',
+ 'Ultrasound beats supine CXR for PTX: sens ~0.83–0.95 vs ~0.28–0.52. [SCCM CCM 2015; Sheng Respiration 2023]']
+},
+
+/* ───────────────────────── S4 ───────────────────────── */
+{
+id:'s4',
+title:'S4 · Sudden deterioration on the ventilator',
+phenotypeContext:'Two hours of hard-won stability on the ventilator. Then everything happens at once.',
+realCases:[
+ {label:'Supine pneumothorax — real deep sulcus sign CXR (Radiopaedia)',url:'https://radiopaedia.org/cases/supine-pneumothorax-deep-sulcus-sign-1'},
+ {label:'Pneumothorax on lung ultrasound — real barcode/M-mode (Radiopaedia)',url:'https://radiopaedia.org/cases/pneumothorax-ultrasound'}],
+learningObjectives:[
+ 'Recognize tension PTX from ventilator signals + hemodynamics','Treat before imaging — clinical diagnosis',
+ 'Apply US criteria incl. lung point; deep sulcus on supine CXR','Choose decompression site and chest tube size for a ventilated patient'],
+initialState:{
+ vitals:{hr:138,spo2:84,sbp:78,dbp:50,rr:14,etco2:24},
+ vent:{vt:450,rr:14,flow:80,peep:5,fio2:1.0,raw:34,crs:22},
+ abg:{ph:7.20,paco2:72,pao2:52,hco3:25},
+ abgNote:'During the crisis, FiO2 1.0.',
+ imaging:{cxr:{ett:'normal',ptx:'tension',deepSulcus:true,shift:'left'},
+          us:{sliding:false,mmode:'lungpoint',side:'RIGHT hemithorax',lungpoint:true,blines:false}},
+ severity:0.9
+},
+scenes:[
+{ id:'s4-1', dataView:'scalars', type:'single',
+  discuss:{question:'Tension pneumothorax is a clinical diagnosis — yet we all still reach for imaging. Where exactly is the line between confirming and dangerously delaying?',
+   points:['The numbers set the line: 70% of ventilated tension PTX deteriorate within minutes; hypotension odds 12.6x, arrest 17.7x.','Bedside US while the kit opens = confirmation without delay; CT = delay; in arrest, decompress empirically.','Agree as a team in advance which findings trigger the needle without waiting for any image.'],
+   evidence:'Roberts Ann Surg 2015; Barton JEM 1997'},
+  prompt:'Sudden alarms: PIP 48 → 70 cmH2O over minutes, Pplat rising, SpO2 92 → 84%, then BP 78/50, HR 138.\n\nFirst move?',
+  options:[
+   {id:'a',correct:true,label:'Suspect TENSION PNEUMOTHORAX — this is a clinical diagnosis; prepare to treat BEFORE imaging while you scan',
+    evidence:'Roberts Ann Surg 2015; Barton JEM 1997',
+    feedback:'Correct. In ventilated tension PTX: early hypoxemia (91.8%), then rapid hypotension/arrest — odds of hypotension 12.6x and arrest 17.7x vs the spontaneously breathing; 70% deteriorate within minutes. Rising PIP (VC), rising Pplat, falling Vt (PC) are the machine\'s way of shouting. Tension PTX = clinical dx; treat before imaging.'},
+   {id:'b',correct:false,label:'Order a stat portable CT chest to characterize the barotrauma',
+    evidence:'Roberts Ann Surg 2015',
+    feedback:'He will arrest in radiology. 70% of ventilated tension PTX deteriorate within minutes — this is diagnosed and treated at the bedside.',
+    effect:{deterioration:{vitals:{sbp:64,dbp:40,spo2:78}}}},
+   {id:'c',correct:false,label:'Deepen sedation and add paralytic — this is dyssynchrony',
+    evidence:'Barton JEM 1997',
+    feedback:'Dyssynchrony does not drop the blood pressure to 78/50 with a climbing PLATEAU. Sedating away the alarm kills the patient with the fixable problem.',
+    effect:{deterioration:{vitals:{spo2:80,sbp:70}}}}]},
+
+{ id:'s4-2', dataView:'us', type:'multi',
+  requiredToAdvance:['a'],
+  onAdvanceNote:'Diagnosis secured at the bedside: right tension pneumothorax. He is peri-arrest — move.',
+  prompt:'Rapid RIGHT chest ultrasound while the kit opens (image at left): sliding ABSENT, no B-lines, barcode on M-mode — and this time a clear transition point where sliding lung meets still lung.\nSupine CXR from 5 min ago shows a deep lucent right costophrenic sulcus.\n\nLock in the diagnosis.',
+  options:[
+   {id:'a',correct:true,label:'Absent sliding + absent B-lines + barcode + LUNG POINT = pneumothorax, pathognomonic',
+    evidence:'SCCM CCM 2015; Buda NEJM 2023; Sheng Respiration 2023',
+    feedback:'Correct. The four US criteria: (1) absent sliding, (2) absent B-lines, (3) barcode/stratosphere on M-mode, (4) lung point — spec 99–100%, sens 59–75% (absent in massive PTX). Probe 2nd–4th ICS MCL, linear 5–12 MHz. US sens ~0.83–0.95 crushes supine CXR ~0.28–0.52.'},
+   {id:'b',correct:'partial',label:'The deep sulcus sign on the supine film independently confirms it',
+    evidence:'Gordon Radiology 1980; Chiles CCM 1986; Schotland NEJM 1998',
+    feedback:'Supportive, yes: supine PTX signs = deep sulcus, basal/upper-quadrant hyperlucency, double-diaphragm, mediastinal shift (tension). But supine CXR sensitivity is poor (~13–53%) — a negative film never excludes PTX, and you do not wait on films in tension physiology.'},
+   {id:'c',correct:false,label:'Unlike this morning, absent sliding alone is enough — diagnose PTX on that',
+    evidence:'Patel JOMI EFAST 2021; SCCM CCM 2015',
+    feedback:'You just learned this lesson in S3: absent sliding alone was a MAINSTEM. It is the lung point (plus tension physiology) that makes today different.'}]},
+
+{ id:'s4-3', dataView:'monitor', type:'single',
+  discuss:{question:'Your hospital stocks 5-cm 14G catheters and this patient has a BMI of 44. Walk through site selection and every failure mode you can name.',
+   points:['Chest wall depth drives failure: 2nd ICS MCL fails ~38% with a 5-cm catheter — yet is preferred in the obese (thinner wall there).','4th/5th ICS anterior/mid-axillary fails ~13% with better landmark accuracy in most adults.','Failure modes: kinking, clot, catheter too short, wrong interspace, below-rib neurovascular injury — finger thoracostomy bypasses them all.'],
+   evidence:'Laan Injury 2016; WSES-AAST 2025; Inaba JTACS 2015'},
+  prompt:'BP now 68/42. Choose your immediate decompression.',
+  options:[
+   {id:'a',correct:true,label:'14 G needle, 4th/5th ICS anterior/mid-axillary line, over the top of the rib (predicted failure ~13%)',
+    evidence:'WSES-AAST 2025; Laan Injury 2016; Inaba JTACS 2015',
+    feedback:'Correct. 14 G over the rib top (spares the neurovascular bundle). Site data: 2nd ICS MCL — traditional but ~38% predicted failure with a 5-cm catheter and worse landmark accuracy; 4th/5th ICS anterior/mid-axillary ~13% failure. (Exception: 2nd ICS MCL preferred in the obese — thinner wall.) Finger thoracostomy is a robust alternative.',
+    effect:{vitals:{sbp:96,dbp:60,spo2:90,hr:122}}},
+   {id:'b',correct:'partial',label:'14 G at the 2nd ICS MCL — the classic site',
+    evidence:'Laan Injury 2016; WSES-AAST 2025',
+    feedback:'It may work — and it is the preferred site in obese patients (thinner chest wall) — but in most adults a 5-cm catheter fails ~38% of the time at 2nd ICS MCL vs ~13% at 4th/5th ICS anterior/mid-axillary. Air hisses; pressure recovers partially. Know the failure numbers.',
+    effect:{vitals:{sbp:88,dbp:56,spo2:88,hr:128}}},
+   {id:'c',correct:'partial',label:'Immediate finger thoracostomy, 4th/5th ICS',
+    evidence:'WSES-AAST 2025',
+    feedback:'Acceptable — finger thoracostomy is a robust alternative to needle decompression, guaranteed to reach the pleura, and converts directly to the chest tube you need next.',
+    effect:{vitals:{sbp:98,dbp:62,spo2:91,hr:120}}},
+   {id:'d',correct:false,label:'Skip decompression — go straight for the chest tube tray and prep sterilely',
+    evidence:'Roberts Ann Surg 2015; WSES-AAST 2025',
+    feedback:'He is peri-arrest at 68/42 — decompress within seconds (needle or finger), THEN place the definitive tube. Sterile ritual is for patients with a blood pressure.',
+    effect:{deterioration:{vitals:{sbp:58,dbp:36,spo2:74,hr:146}}}}]},
+
+{ id:'s4-4', dataView:'cxr', type:'single',
+  prompt:'Rush of air; BP recovers to 96/60. Definitive management for this VENTILATED patient with an ongoing air leak?',
+  options:[
+   {id:'a',correct:true,label:'Chest tube 24–28 Fr, 4th–6th ICS in the safe triangle',
+    evidence:'ACCP Baumann Chest 2001; WSES-AAST 2025',
+    feedback:'Correct. Definitive drainage: 4th–6th ICS in the "safe triangle". Ventilated patient / large air leak → 24–28 Fr; small-bore is first-line otherwise. Positive-pressure ventilation guarantees the leak continues until the lung seals.',
+    effect:{vitals:{sbp:104,dbp:66,spo2:94,hr:112},severity:0.7,
+            imaging:{cxr:{ett:'normal',ptx:false,deepSulcus:false,shift:'none'},
+                     us:{sliding:true,mmode:'seashore',side:'BILATERAL',blines:false}},
+            abg:{pao2:80,ph:7.24}}},
+   {id:'b',correct:false,label:'Small-bore pigtail — always sufficient and less traumatic',
+    evidence:'ACCP Baumann Chest 2001',
+    feedback:'Small-bore IS first-line for most spontaneous PTX — but this is a VENTILATED patient with a large air leak: 24–28 Fr. An undersized tube that cannot match the leak re-tensions on the ventilator.'},
+   {id:'c',correct:false,label:'Needle catheter is working — leave it as definitive management',
+    evidence:'WSES-AAST 2025; ACCP Baumann Chest 2001',
+    feedback:'A 14 G catheter is a bridge measured in minutes: it kinks, clots, and cannot match a ventilated air leak. Definitive = chest tube.',
+    effect:{deterioration:{vitals:{sbp:82,spo2:86}}}}]}
+],
+debriefSummary:[
+ 'Ventilated tension PTX: rising PIP (VC) / falling Vt (PC), rising Pplat, EARLY hypoxemia (91.8%), then hypotension (odds 12.6x) and arrest (17.7x); 70% deteriorate within minutes. Clinical diagnosis — treat before imaging. [Roberts Ann Surg 2015; Barton JEM 1997]',
+ 'US criteria: absent sliding + absent B-lines + barcode + LUNG POINT (spec 99–100%; absent in massive PTX). US sens ~0.83–0.95 vs supine CXR ~0.28–0.52. [SCCM CCM 2015; Sheng Respiration 2023]',
+ 'Supine CXR signs: deep sulcus, basal hyperlucency, double-diaphragm, mediastinal shift — sens only ~13–53%. [Gordon Radiology 1980; Chiles CCM 1986]',
+ 'Needle decompression: 14 G over the rib top; 4th/5th ICS anterior/mid-axillary (~13% failure) vs 2nd ICS MCL (~38%, but preferred in obese). Finger thoracostomy is a robust alternative. [WSES-AAST 2025; Laan Injury 2016; Inaba JTACS 2015]',
+ 'Definitive: chest tube 4th–6th ICS safe triangle; ventilated/large leak → 24–28 Fr. [ACCP Baumann Chest 2001]']
+},
+
+/* ───────────────────────── S5 ───────────────────────── */
+{
+id:'s5',
+title:'S5 · The refractory ventilated patient',
+phenotypeContext:'ICU, hour 8. 75 kg PBW. The ventilator, the blood gas, and the blood pressure are all fighting you. Someone in the room has to make the calls.',
+learningObjectives:[
+ 'Attribute high Ppeak with acceptable Pplat to resistance','Set the vent: Vt 6–8 mL/kg, RR 10–14, VE ≤10, I:E ≥1:3, Pplat ≤30',
+ 'Diagnose hyperinflation shock with a disconnection trial','Distrust a low measured auto-PEEP (hidden auto-PEEP)',
+ 'Trigger the ECMO referral on ELSO/EOLIA criteria; choose VV'],
+initialState:{
+ vitals:{hr:134,spo2:86,sbp:88,dbp:56,rr:20,etco2:70},
+ vent:{vt:550,rr:20,flow:60,peep:5,fio2:1.0,raw:35,crs:32},
+ abg:{ph:7.12,paco2:88,pao2:58,hco3:25},
+ abgNote:'FiO2 1.0. Transport settings still running.',
+ dynAbg:true, co2K:261,
+ imaging:{cxr:{ett:'normal'},us:{sliding:true,mmode:'seashore',side:'BILATERAL'}},
+ severity:0.95
+},
+scenes:[
+{ id:'s5-1', dataView:'scalars', type:'single',
+  prompt:'You inherit transport settings: A/C-VC, Vt 550, RR 20, flow 60 L/min, PEEP 5, FiO2 1.0.\nMeasured: Ppeak ~74, Pplat ~33 (inspiratory hold).\n\nWhat are these pressures telling you?',
+  options:[
+   {id:'a',correct:true,label:'Huge peak-to-plateau gradient (>30) = RESISTANCE problem (bronchospasm), while Pplat reflects alveolar distension — the safety parameter',
+    evidence:'Leatherman Chest 2015; Corbridge AJRCCM 1995; Tobin NEJM 1994',
+    feedback:'Correct. Ppeak = resistive drop (Raw x flow) + Pplat. In asthma Ppeak often runs 60–80+ with a peak−plateau gradient >30: high PEAK with acceptable PLATEAU = resistance, not overdistension. Manage to Pplat ≤25–30 (some accept ≤35), not to the peak alarm.'},
+   {id:'b',correct:false,label:'Ppeak 74 means ARDS-stiff lungs — drop Vt to 4 mL/kg immediately',
+    evidence:'Leatherman Chest 2015',
+    feedback:'Wrong mechanism. Stiff lungs raise PLATEAU; his gradient of ~40 is resistive. Reflex ultra-low Vt without fixing expiratory time leaves the real killer — dynamic hyperinflation — untouched.'},
+   {id:'c',correct:false,label:'Pressures this high mean bilateral pneumothoraces until proven otherwise — needle both sides',
+    evidence:'Roberts Ann Surg 2015; Leatherman Chest 2015',
+    feedback:'No tension physiology reasoning here: bilateral sliding is present on US and the gradient pattern is classic resistance. Empiric bilateral needles in a sliding chest = iatrogenic barotrauma.',
+    effect:{deterioration:{vitals:{spo2:82}}}}]},
+
+{ id:'s5-2', dataView:'ventpanel', type:'vent',
+  discuss:{question:'Defend permissive hypercapnia to a consultant staring at pH 7.21. What are the REAL contraindications — and what does tolerating the CO2 buy this patient?',
+   points:['No RCTs — physiology plus series; the trade: accept PaCO2 50–90+ and pH >=7.20 to avoid the lethal cost of chasing normocapnia (hyperinflation, barotrauma, shock).','True contraindications: raised ICP, severe CV instability, sickle crisis. Bicarbonate below pH 7.20 is controversial/unproven.','Minute ventilation is the primary determinant of hyperinflation — the CO2 is the receipt, not the injury.'],
+   evidence:'Tuxen ARRD 1992; Leatherman Chest 2015; Marini AJRCCM 2011'},
+  evidence:'Tuxen ARRD 1992; Leatherman Chest 2015; Williams ARRD 1992; Marini AJRCCM 2011; Corbridge AJRCCM 1995',
+  effectOnSuccess:{vitals:{sbp:96,dbp:60,spo2:89,etco2:62},severity:0.9,
+                   abg:{hco3:26}},
+  prompt:'Take the ventilator. Strategy: CONTROLLED HYPOVENTILATION / PERMISSIVE HYPERCAPNIA.\nTargets — Vt 6–8 mL/kg PBW (450–600 mL at 75 kg), RR 10–14, flow 60–100 L/min square, set PEEP 0–5, VE ≤10 L/min (often 6–8), I:E ≥1:3–1:4, Pplat ≤25–30, ΔP ≤14–15. Watch tau: complete exhalation needs ~3–5 time constants. The simulated ABG updates as you change VE.'},
+
+{ id:'s5-3', dataView:'monitor', type:'single',
+  discuss:{question:'The nurse asks why you are unplugging the ventilator from a crashing patient. Script your 20-second bedside explanation.',
+   points:['The chest is overfilled with trapped gas; every breath stacks more and squeezes venous return — disconnecting lets it out.','A transient BP rise during 30–60 s of disconnection CONFIRMS the mechanism, at zero cost.','Then: fluids, low minute ventilation, and only then more pressors — cause before number.'],
+   evidence:'Williams ARRD 1992; Caplan Front Physiol 2023'},
+  prompt:'Settings accepted — but MAP is 54 (BP 76/44) on norepinephrine. The nurse asks for a second pressor.\n\nBest next move for this shock?',
+  options:[
+   {id:'a',correct:true,label:'DISCONNECT the ventilator 30–60 s (diagnostic + therapeutic), give volume, keep VE low',
+    evidence:'Williams ARRD 1992; Caplan Front Physiol 2023',
+    feedback:'Correct. Hyperinflation impedes venous return → MAP 50–60 shock physiology. A 30–60 s disconnection lets trapped gas out: transient BP improvement CONFIRMS the mechanism. Then: fluids + the low-VE strategy you just set. Pressors treat the number, not the cause.',
+    effect:{vitals:{sbp:102,dbp:64,hr:120}}},
+   {id:'b',correct:false,label:'Add vasopressin and INCREASE the rate to 18 to clear the acidosis',
+    evidence:'Williams ARRD 1992; Tuxen ARRD 1992',
+    feedback:'Raising RR shortens Te, stacks more gas, drops venous return further — you would treat hyperinflation shock with more hyperinflation. VE is the primary determinant of hyperinflation.',
+    effect:{deterioration:{vitals:{sbp:70,dbp:42}}}},
+   {id:'c',correct:false,label:'Bedside pericardiocentesis for presumed tamponade',
+    evidence:'Caplan Front Physiol 2023',
+    feedback:'The "tamponade" here is intrathoracic gas, not pericardial fluid. The disconnection trial is the diagnostic tap — and it is free.',
+    effect:{deterioration:{vitals:{sbp:66}}}}]},
+
+{ id:'s5-4', dataView:'scalars', type:'single',
+  prompt:'End-expiratory hold reads auto-PEEP of only 5 cmH2O — yet Pplat is 28 and he remains hyperinflated on exam.\n\nReconcile the numbers.',
+  options:[
+   {id:'a',correct:true,label:'HIDDEN auto-PEEP: with widespread airway closure the measured value underestimates true alveolar pressure — trust the Pplat',
+    evidence:'Leatherman Chest 2015; Leatherman/Ravenscraft CCM 1996',
+    feedback:'Correct. Classic example: Ppeak 76, Pplat 28, measured auto-PEEP only 5 — occluded airways cannot transmit their alveolar pressure to the port during the hold. Pplat is the more reliable hyperinflation signal. Also track VEI: keep end-inspiratory volume above FRC <20 mL/kg (<1.4 L); ≥1.4 L carried a 65% complication rate (barotrauma/hypotension).'},
+   {id:'b',correct:false,label:'Auto-PEEP 5 is nearly normal — hyperinflation is resolved; increase RR to fix the CO2',
+    evidence:'Leatherman/Ravenscraft CCM 1996; Tuxen ARRD 1992',
+    feedback:'The trap the measurement sets. Airway closure hides trapped gas from the expiratory port; believing the 5 and raising the rate re-inflates the chest you just decompressed.',
+    effect:{deterioration:{vitals:{sbp:80,spo2:84}}}},
+   {id:'c',correct:false,label:'Add external PEEP 12 to splint airways open and lower the auto-PEEP',
+    evidence:'Leatherman Chest 2015; Marini AJRCCM 2011',
+    feedback:'COPD reasoning, wrong disease. In asthma\'s airway-closure physiology external PEEP may WORSEN hyperinflation — keep set PEEP 0–5.',
+    effect:{deterioration:{vitals:{sbp:78}}}}]},
+
+{ id:'s5-5', dataView:'abg', type:'single',
+  discuss:{question:'It is 2 AM and the nearest ECMO center is 90 minutes away. When should tonight\'s referral call have happened — and what does your region\'s pathway actually look like?',
+   points:['The worst prognostic factor is pre-ECMO arrest — the call belongs BEFORE the arrest, at criteria, not at futility.','Asthma is among the best ECMO indications (83.5–95% survival) — a low referral threshold is evidence-based, not soft.','Concretely: who answers your ECMO phone tonight? Mobile retrieval? What do they need from you? If you cannot answer, that is the homework.'],
+   evidence:'Yeo Crit Care 2017; Warren BJA 2020; ELSO / ISHLT-HFSA 2023'},
+  prompt:'Hour 14. Sevoflurane trial via AnaConDa: transient PIP improvement, now regressing.\nDespite optimal settings: pH 7.13, PaCO2 92 (>=60 for >6 h), PaO2 55 on FiO2 1.0 (P/F 55), Pplat creeping to 36, MAP 55 on two pressors.\n\nThe decision.',
+  options:[
+   {id:'a',correct:true,label:'CALL CT SURGERY / ECMO TEAM NOW for VV ECMO — he meets criteria on every axis',
+    evidence:'ELSO / ISHLT-HFSA 2023; Del Sorbo Lancet RM 2014; EOLIA; Yeo Crit Care 2017',
+    feedback:'Correct. He satisfies: ELSO hypercapnic (CO2 retention despite Pplat >30) and hypoxemic (P/F <100 on FiO2 >90%); Brodie/Bacchetta (pH <7.15, Pplat >35); EOLIA-style (pH <7.25 + PaCO2 >=60 for >6 h; P/F <80 for >6 h); ATS 2024 (P/F <80 or pH <7.25 + PaCO2 >=60, reversible etiology, <7 d MV). Asthma is among the BEST ECMO indications — it is reversible. Call before the arrest: pre-ECMO cardiac arrest is the worst prognostic factor.',
+    effect:{vitals:{spo2:88}}},
+   {id:'b',correct:false,label:'VA ECMO — his blood pressure is low, so he needs circulatory support',
+    evidence:'Bromberger CCM 2020; Guglin JACC 2019; Yeo Crit Care 2017',
+    feedback:'VV is preferred/default (respiratory failure, excellent CO2 clearance; ~80% of asthma ECMO). Start VV even if hemodynamically unstable — his shock is hyperinflation + hypercapnia, which VV fixes. VV survival 58% vs VA 43% in pressor-requiring ARDS; only ~4% need conversion. VA is reserved for arrest/peri-arrest or refractory shock despite VV (VA-ECMO for asthma-related arrest: AHA 2025 Class 2a, LOE C-LD).'},
+   {id:'c',correct:false,label:'ECMO is futile salvage — continue conventional management and accept the trajectory',
+    evidence:'Yeo Crit Care 2017; Warren BJA 2020; Grennan ASAIO 2022; Zakrajsek Chest 2023',
+    feedback:'The opposite is true. Asthma is among the BEST ECMO indications: ELSO adults 83.5% survival (n=272), NHS England 95%, teens/young adults 90% (n=137), ECCO2R series 100% (n=26); adjusted mortality OR 0.33–0.48 vs no ECMO. Waiting until arrest is what destroys those odds.',
+    effect:{deterioration:{vitals:{sbp:70,spo2:80}}}},
+   {id:'d',correct:'partial',label:'Request ECCO2R (low-flow) — the derangement is mainly hypercapnic',
+    evidence:'Kon ATS 2017; Del Sorbo Lancet RM 2014',
+    feedback:'Right family, incomplete fit: ECCO2R suffices when the problem is MAINLY hypercapnia — but he is also hypoxemic (P/F 55 on FiO2 1.0), which needs full VV flow. Still, you called the right team; they will size the circuit.'}]},
+
+{ id:'s5-6', dataView:'monitor', type:'single',
+  prompt:'VV ECMO cannulated at hour 16. Within hours the ventilator is resting the lungs.\n\nWhat does the post-cannulation course typically look like — and why does it matter that you called early?',
+  options:[
+   {id:'a',correct:true,label:'Rapid de-escalation: reported series show PIP 38.2→25, driving pressure 29.5→16.8, FiO2 81→49 after ECMO — and the worst prognostic factor is pre-ECMO arrest, which you prevented',
+    evidence:'Zakrajsek Chest 2023; Yeo Crit Care 2017; Bromberger CCM 2020',
+    feedback:'Correct. ECMO uncouples gas exchange from the obstructed airways so the vent can truly rest: PIP 38.2→25, ΔP 29.5→16.8, FiO2 81→49. Survival in asthma: ELSO 83.5%, NHS England 95%. Calling before arrest preserved the single strongest determinant of his outcome.',
+    effect:{vitals:{hr:104,spo2:95,sbp:110,dbp:68,rr:12,etco2:48},severity:0.5,
+            abg:{ph:7.32,paco2:55,pao2:80},dynAbg:false}},
+   {id:'b',correct:false,label:'Keep the pre-ECMO vent settings — the lungs still need the minute ventilation',
+    evidence:'Zakrajsek Chest 2023',
+    feedback:'The circuit now owns CO2 clearance; continuing high-pressure ventilation just continues barotrauma. Rest settings are the point of the run.'},
+   {id:'c',correct:false,label:'ECMO buys days at best; plan the family meeting for withdrawal',
+    evidence:'Warren BJA 2020; Grennan ASAIO 2022',
+    feedback:'Wrong frame. Severe asthma is a REVERSIBLE disease — that is exactly why its ECMO outcomes (83.5–95% survival) lead the registry. The bronchospasm will break; the circuit is the bridge.'}]}
+],
+debriefSummary:[
+ 'High Ppeak + acceptable Pplat = resistance (peak−plateau gradient often >30); manage to Pplat ≤25–30 and ΔP ≤14–15. [Leatherman Chest 2015; Tobin NEJM 1994]',
+ 'Controlled hypoventilation: Vt 6–8 mL/kg PBW, RR 10–14, flow 60–100 square, set PEEP 0–5, VE ≤10 (often 6–8) — VE is the PRIMARY determinant of hyperinflation; I:E ≥1:3–1:4; exhalation needs ~3–5 tau; tolerate pH ≥7.20, PaCO2 50–90+ (contraindications: raised ICP, severe CV instability, sickle crisis). [Tuxen ARRD 1992; Corbridge AJRCCM 1995; Marini AJRCCM 2011]',
+ 'Hyperinflation shock (MAP 50–60): 30–60 s ventilator DISCONNECTION is diagnostic and therapeutic + fluids + lower VE. [Williams ARRD 1992; Caplan Front Physiol 2023]',
+ 'Hidden auto-PEEP: measured end-expiratory hold can read falsely low with airway closure (Ppeak 76/Pplat 28/auto-PEEP 5); trust Pplat; keep VEI <20 mL/kg (<1.4 L — ≥1.4 L had 65% complications). [Leatherman/Ravenscraft CCM 1996; Leatherman Chest 2015]',
+ 'ECMO triggers: ELSO (CO2 retention despite Pplat >30; P/F <100 on FiO2 >90%), Brodie/Bacchetta (pH <7.15 or Pplat >35–45), EOLIA-style (pH <7.25 + PaCO2 ≥60 >6 h; P/F <80 >6 h). VV preferred even if unstable; ECCO2R when mainly hypercapnic. Outcomes 83.5–95% survival; worst prognostic factor = pre-ECMO arrest. [ELSO / ISHLT-HFSA 2023; EOLIA; Yeo Crit Care 2017; Zakrajsek Chest 2023]']
+}
+,
+
+/* ───────────────────────── S6 (v3) ───────────────────────── */
+{
+id:'s6',
+title:'S6 · The clinic follow-up — after the storm',
+phenotypeContext:'Six weeks later: the patient from S2–S5 survived ECMO and sits in your severe-asthma clinic. The next exacerbation is preventable — if this visit is done right.',
+learningObjectives:[
+ 'Separate difficult-to-treat from severe asthma','Order the severe-asthma workup that changes management',
+ 'Phenotype for biologic eligibility (GINA + ACCP/CHEST)','Choose between overlapping biologic classes with the patient',
+ 'Plan the 4-month trial, response review, and OCS-first de-escalation'],
+realCases:[
+ {label:'GINA reports incl. Difficult-to-treat & Severe Asthma Guide',url:'https://ginasthma.org/reports/'},
+ {label:'ACCP/CHEST 2025 biologic guideline (CHEST journal)',url:'https://journal.chestnet.org/article/S0012-3692(25)05380-2/fulltext'}],
+initialState:{
+ vitals:{hr:76,spo2:97,sbp:118,dbp:74,rr:14,etco2:38},
+ vent:null, abg:null,
+ imaging:{cxr:null,us:null},
+ severity:0.35
+},
+scenes:[
+{ id:'s6-1', dataView:'flowloop', type:'single',
+  discuss:{question:'"Difficult-to-treat does not mean a difficult patient." Which modifiable factors most often masquerade as severe asthma in your clinic — and which do we screen for worst?',
+   points:['Inhaler technique (device switches after hospitalization are a classic trap) and adherence top the list.',
+    'Comorbidities: chronic rhinosinusitis with nasal polyps, GERD, obesity, OSA, smoking/vaping.',
+    'Wrong diagnosis: inducible laryngeal obstruction, EGPA, ABPA — the "asthma" that is not asthma.',
+    'Payer reality: the severe label gates biologic access, so document every optimization step you take.'],
+   evidence:'GINA SA Guide 2025'},
+  prompt:'Six weeks post-ICU. On high-dose budesonide-formoterol MART since discharge; prednisone finished. ACT 16, one urgent-care wheeze visit last week. You watch him use the turbuhaler: he shakes it, fires it into a spacer, and inhales slowly — technique built for his old pMDI.\n\nWhat is this patient, by definition?',
+  options:[
+   {id:'a',correct:true,label:'DIFFICULT-TO-TREAT asthma for now — "severe" is a retrospective label applied only after technique, adherence, comorbidities and diagnosis are re-verified on optimized therapy',
+    evidence:'GINA SA Guide 2025',
+    feedback:'Correct. Difficult-to-treat = uncontrolled despite medium/high-dose ICS + a second controller (usually LABA) or maintenance OCS, or requiring high-dose treatment to stay controlled. SEVERE is a subset: still uncontrolled despite adherence with maximal optimized high-dose ICS-LABA AND managed contributory factors, or worsening on step-down. It does not mean a "difficult patient" — his turbuhaler technique may be the entire story.'},
+   {id:'b',correct:false,label:'Severe asthma, obviously — he was on ECMO two months ago',
+    evidence:'GINA SA Guide 2025',
+    feedback:'A near-fatal attack makes him HIGH-RISK, not definitionally severe. Many "severe" patients reclassify once technique, adherence and comorbidities are fixed — and the label matters, because it gates biologic therapy.'},
+   {id:'c',correct:false,label:'Acceptably controlled — ACT 16 is reasonable after an ICU stay',
+    evidence:'GINA 2026; Cloutier JACI 2020',
+    feedback:'ACT 16–19 = NOT well controlled (well-controlled >=20; MID 3). A post-ECMO patient is precisely the wrong person in whom to accept mediocre control.'}]},
+
+{ id:'s6-2', dataView:'monitor', type:'multi',
+  requiredToAdvance:['a','b','c','d'],
+  onAdvanceNote:'Technique retrained on his device, adherence confirmed by refill data. He returns in 4 weeks, still symptomatic: ACT 15, one further OCS burst.',
+  discuss:{question:'Which single result on today’s panel would most change your biologic choice — and which numbers will the payer demand?',
+   points:['Blood eosinophils: the anti-IL5/5Ra gate — and a value >1,500 flips the CHEST logic away from dupilumab.',
+    'FeNO: part of the T2-high definition, a strong dupilumab/tezepelumab predictor, and the CHEST switching biomarker (post-treatment FeNO >=25 advises dupilumab).',
+    'IgE + sensitization: an eligibility key for omalizumab that does NOT predict response magnitude.',
+    'Documented exacerbations and OCS courses — the currency of every prior authorization.'],
+   evidence:'GINA SA Guide 2025; ACCP/CHEST Biologics 2025'},
+  prompt:'Build today’s severe-asthma workup. Select every test that will change management.',
+  options:[
+   {id:'a',correct:true,label:'Spirometry with bronchodilator response',
+    evidence:'ACCP/CHEST Biologics 2025',
+    feedback:'Yes. Objective airflow limitation anchors the diagnosis, and the FEV1 itself steers therapy — CHEST suggests dupilumab over omalizumab when FEV1 <70% predicted in allergic asthma.'},
+   {id:'b',correct:true,label:'Blood eosinophils — drawn now, while he is steroid-free',
+    evidence:'GINA SA Guide 2025',
+    feedback:'Yes. The anti-IL5/5Ra gate is blood eos above the locally specified cut (e.g. >=150 or >=300/uL) — and eos are suppressed by steroids, so timing matters; cut-points sometimes differ for patients on OCS.'},
+   {id:'c',correct:true,label:'FeNO',
+    evidence:'ACCP/CHEST Biologics 2025',
+    feedback:'Yes. FeNO >=25 ppb sits in the T2-high definition, strongly predicts dupilumab and tezepelumab response, and CHEST uses post-treatment FeNO >=25 to advise switching an anti-IL5/5Ra non-responder to dupilumab.'},
+   {id:'d',correct:true,label:'Total IgE + aeroallergen sensitization (skin prick or specific IgE), plus a T2-comorbidity screen (nasal polyps, atopic dermatitis)',
+    evidence:'GINA SA Guide 2025',
+    feedback:'Yes. Omalizumab eligibility = sensitization + total IgE and weight within the dosing range + exacerbations. And comorbidities steer the choice: atopic dermatitis/EoE toward dupilumab; CRSwNP toward dupilumab or mepolizumab.'},
+   {id:'e',correct:false,label:'Skip the workup — start a biologic today, the criteria will sort themselves out',
+    evidence:'GINA SA Guide 2025',
+    feedback:'No. GINA recommends biologics only for severe asthma AFTER optimization is verified; payers demand documented biomarkers and exacerbations; and where relevant, test for and treat parasitic infection before commencing treatment.'}]},
+
+{ id:'s6-3', dataView:'flowloop', type:'single',
+  discuss:{question:'His eosinophils were 80 during the ICU stay and 480 today. What does that swing teach about timing biomarkers — and what about the patient whose markers never "unmask"?',
+   points:['Steroids suppress eosinophils: GINA notes different cut-points may apply on OCS, and supervised weaning can unmask eligibility.',
+    'Serial measurements beat single draws; many payers accept the highest historical value.',
+    'For persistent T2-low presentations despite symptoms: tezepelumab retains efficacy without elevated T2 markers.'],
+   evidence:'GINA SA Guide 2025'},
+  prompt:'Results (simulated): FEV1 61% predicted with bronchodilator response; blood eos 480/uL (steroid-free); FeNO 46 ppb; total IgE 220 IU/mL with dust-mite sensitization; nasal polyps on exam. Technique now correct, adherence verified — still ACT 15 with ongoing exacerbations.\n\nClassify him now.',
+  options:[
+   {id:'a',correct:true,label:'SEVERE T2-high asthma — uncontrolled despite verified, optimized high-dose therapy, with eos >=300 and FeNO >=25: biologic assessment is now appropriate',
+    evidence:'GINA SA Guide 2025; ACCP/CHEST Biologics 2025',
+    feedback:'Correct. He has earned the retrospective label: uncontrolled despite adherence + optimized high-dose ICS-LABA + managed contributory factors. T2-high by the working definition (eos >=300 cells/uL, FeNO >=25 ppb, and/or sputum eos >=1–3%) — with eligibility for multiple biologic classes.'},
+   {id:'b',correct:false,label:'T2-low asthma — the ICU steroids are inflating these biomarkers',
+    evidence:'GINA SA Guide 2025',
+    feedback:'Backwards. Steroids SUPPRESS eosinophils and FeNO. Steroid-free eos 480 with FeNO 46 is unambiguous T2-high inflammation.'},
+   {id:'c',correct:false,label:'He needs 12 more months of documented optimization before any biologic can be considered',
+    evidence:'GINA SA Guide 2025',
+    feedback:'No fixed waiting period exists — optimization is about verification, not a calendar. He is optimized, verified, and still exacerbating; delay now is exposure to the next near-fatal attack.'}]},
+
+{ id:'s6-4', dataView:'monitor', type:'single',
+  discuss:{question:'Four classes, one patient, zero head-to-head trials. In real life, how do you and the patient actually land on one?',
+   points:['GINA’s explicit tie-breakers: payer criteria, T2 comorbidities, response predictors, cost, dosing frequency, route/self-administration, patient preference.',
+    'Logistics are legitimate medicine: q8-weekly benralizumab vs q2-weekly dupilumab is a lifestyle decision the patient owns.',
+    'The polyps are a two-for-one: one drug, two diseases (CRSwNP: dupilumab or mepolizumab).',
+    'Say the quiet part: prior-authorization criteria often decide before you do — document eos, FeNO, exacerbations, optimization.'],
+   evidence:'GINA SA Guide 2025; ACCP/CHEST Biologics 2025'},
+  prompt:'Profile: severe T2-high asthma; eos 480; FeNO 46; IgE 220 IU/mL + dust-mite sensitized; NASAL POLYPS; FEV1 61%; hospitalized (ECMO) this year; not currently OCS-dependent.\n\nPick your opening biologic strategy.',
+  options:[
+   {id:'a',correct:true,label:'Anti-IL5/5Ra or dupilumab, chosen WITH him — polyps (CRSwNP: dupilumab or mepolizumab), hospitalization, high eos/FeNO and FEV1 61% all point there; decide on comorbidity, route/frequency and payer criteria',
+    evidence:'ACCP/CHEST Biologics 2025; GINA SA Guide 2025',
+    feedback:'Correct. CHEST: with hospitalization or frequent exacerbations, dupilumab is suggested over omalizumab — likewise for FEV1 <70%; CRSwNP benefits from dupilumab or mepolizumab. GINA predictors here: higher eos + FeNO (dupilumab, strong); higher eos, exacerbations, polyps (anti-IL5/5Ra, strong). With no head-to-head trials, dosing frequency, self-administration and preference legitimately decide.'},
+   {id:'b',correct:'partial',label:'Omalizumab first — he is sensitized, with IgE squarely in the dosing range',
+    evidence:'ACCP/CHEST Biologics 2025; GINA SA Guide 2025',
+    feedback:'Eligible, yes — but baseline IgE does not predict response, and CHEST suggests dupilumab OVER omalizumab given his hospitalization and FEV1 <70%. Omalizumab shines in childhood-onset, allergen-driven disease with fewer exacerbations and predominant QoL impairment.'},
+   {id:'c',correct:'partial',label:'Tezepelumab — broadest efficacy, works regardless of phenotype',
+    evidence:'GINA SA Guide 2025; ACCP/CHEST Biologics 2025',
+    feedback:'Legitimate: 30–70% exacerbation reduction, and his high eos/FeNO predict a larger effect. But tezepelumab showed NO OCS-sparing vs placebo, and his polyps are better served by dupilumab or mepolizumab.'},
+   {id:'d',correct:false,label:'Maintenance prednisone 10 mg daily — cheaper and just as effective',
+    evidence:'GINA SA Guide 2025',
+    feedback:'OCS toxicity is the outcome we are trying to prevent. GINA: minimizing OCS is a very high priority; biologics cut median maintenance OCS dose by ~50%. Maintenance OCS is a last resort, not an alternative to phenotype-directed therapy.'},
+   {id:'e',correct:false,label:'If his eosinophils had been 1,800/uL, dupilumab would be even more attractive',
+    evidence:'GINA SA Guide 2025; ACCP/CHEST Biologics 2025',
+    feedback:'Reversed. Dupilumab is NOT suggested with blood eos >1,500 (such patients were excluded from the trials; transient eosinophilia occurs in 4–13%, and EGPA can be unmasked on OCS reduction). CHEST: at eos >1,500, consider anti-IL5/5Ra instead.'}]},
+
+{ id:'s6-5', dataView:'monitor', type:'single',
+  discuss:{question:'He asks: "How long will I need this injection?" What do we know — and honestly not know — about stopping biologics?',
+   points:['Re-evaluate every 3–6 months; de-escalate the OTHER therapies first: OCS, then add-on inhaled agents, then cautious ICS-LABA reduction after 3–6 months of stability.',
+    'Discontinuation data are limited; relapse is common enough that most responders continue long-term.',
+    'After long OCS exposure: adrenal-insufficiency surveillance — morning cortisol, plus stress-dose advice for up to 6 months after cessation.',
+    'Practical honesty builds adherence: "we reassess every few months, and you help decide."'],
+   evidence:'GINA SA Guide 2025'},
+  prompt:'Dupilumab is chosen with him (polyps + predictors + q2-week self-injection acceptable). Define success — and the plan if it fails.',
+  options:[
+   {id:'a',correct:true,label:'Trial at least 4 months; review at 3–4 months then every 3–6: ACT/ACQ-5, exacerbations & OCS courses, lung function, polyps, side-effects, satisfaction. Respond -> de-escalate OCS FIRST and never fully stop ICS; no response -> switch eligible classes',
+    evidence:'GINA SA Guide 2025; ACCP/CHEST Biologics 2025',
+    feedback:'Correct. GINA: suggested initial trial at least 4 months; review at 3–4 months, then every 3–6. Good response: taper OCS first (morning cortisol surveillance; stress-dose advice up to 6 months), cease add-on inhaled agents (e.g. LAMA) before reducing ICS-LABA, reduce ICS only after 3–6 months of stability — never completely stop ICS. CHEST adds the switch logic between classes for non-responders at 4–6 months.'},
+   {id:'b',correct:false,label:'Recheck FeNO in 2 weeks — if unchanged, the biologic has failed',
+    evidence:'GINA SA Guide 2025',
+    feedback:'Far too early. The suggested initial trial is AT LEAST 4 months, and response is judged on exacerbations, symptom control, OCS use and lung function — not a 2-week biomarker.'},
+   {id:'c',correct:false,label:'Once he responds, stop the ICS-LABA — the biologic replaces it',
+    evidence:'GINA SA Guide 2025',
+    feedback:'Never completely stop ICS-containing therapy. De-escalation order: OCS first, then add-on inhaled agents, then cautious ICS-LABA dose reduction after 3–6 months of confirmed stability.'}]}
+],
+debriefSummary:[
+ 'Difficult-to-treat = uncontrolled despite medium/high-dose ICS + second controller; SEVERE is a retrospective subset label — uncontrolled despite verified adherence, optimized high-dose ICS-LABA, and managed contributory factors. [GINA SA Guide 2025]',
+ 'Optimize before biologics: technique, adherence, comorbidities, exposures; consider add-on LAMA/LTRA/low-dose azithromycin; low-dose OCS only as last resort; test/treat parasites before starting. [GINA SA Guide 2025]',
+ 'Eligibility gates: anti-IgE = sensitization + IgE/weight in dosing range (baseline IgE does not predict response); anti-IL5/5Ra = eos above local cut (>=150 or >=300); dupilumab = eos/FeNO or OCS-dependence, NOT if eos >1,500; tezepelumab = exacerbations, works even without elevated T2 markers. [GINA SA Guide 2025]',
+ 'CHEST comparative logic (conditional, very-low certainty): hospitalization, >=2 exacerbations/yr, or FEV1 <70% -> dupilumab over omalizumab; steroid-dependent -> anti-IL5/5Ra or dupilumab (OCS cuts ~47%/~28%), dupilumab over tezepelumab; eos >1,500 -> favor anti-IL5/5Ra; CRSwNP -> dupilumab or mepolizumab; post-treatment FeNO >=25 advises switching to dupilumab. [ACCP/CHEST Biologics 2025]',
+ 'Trial >=4 months; review at 3–4 months then every 3–6 (ACT/ACQ-5, exacerbations, OCS, lung function, comorbidities, satisfaction); good response -> OCS taper FIRST with adrenal surveillance; never completely stop ICS; non-response -> switch eligible classes. [GINA SA Guide 2025; ACCP/CHEST Biologics 2025]']
+}
+];
+
+/* ================================================================
+   INIT
+   ================================================================ */
+$('#commitbtn').addEventListener('click',commit);
+$('#nextbtn').addEventListener('click',nextScene);
+$('#skipbtn').addEventListener('click',skipScene);
+$('#homebtn').addEventListener('click',goHome);
+$('#presentbtn').addEventListener('click',()=>{
+  const on=!document.body.classList.contains('present');
+  document.body.classList.toggle('present',on);
+  $('#presentbtn').setAttribute('aria-pressed',String(on));
+});
+$('#revealbtn').addEventListener('click',()=>{
+  App.reveal=!App.reveal;
+  $('#revealbtn').setAttribute('aria-pressed',String(App.reveal));
+  if(curView==='cxr') setView('cxr');   // re-render SVG annotations
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter' && App.advanceReady && $('#endoverlay').style.display==='none'
+     && $('#homeoverlay').style.display==='none') nextScene();
+});
+buildHome();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
